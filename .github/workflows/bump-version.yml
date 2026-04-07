@@ -12,12 +12,14 @@ jobs:
     name: "Bump chart versions and create tags"
     permissions:
       contents: write
+    outputs:
+      bumped: ${{ steps.bump.outputs.bumped }}
+      charts: ${{ steps.bump.outputs.charts }}
     steps:
       - name: Check out
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
-          token: "${{ secrets.PERSONAL_ACCESS_TOKEN }}"
 
       - name: Set up Python
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
@@ -137,9 +139,17 @@ jobs:
             done
 
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "Tags have been pushed and release workflows will trigger automatically." >> $GITHUB_STEP_SUMMARY
+            echo "Tags have been pushed and release workflow will be triggered." >> $GITHUB_STEP_SUMMARY
           else
             echo "## Version Bump Summary" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "No version bumps required - no chart changes found since last release." >> $GITHUB_STEP_SUMMARY
           fi
+
+  release:
+    needs: bump-version
+    if: needs.bump-version.outputs.bumped == 'true'
+    uses: ./.github/workflows/helm-release.yml
+    secrets: inherit
+    permissions:
+      contents: write
