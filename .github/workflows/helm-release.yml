@@ -33,7 +33,7 @@ jobs:
 
             echo "Processing dependencies for $chart_dir"
 
-            yq '.dependencies[].repository // empty' "$chart_dir/Chart.yaml" | sort -u | while read -r repo_url; do
+            yq '.dependencies[].repository | select(. != null)' "$chart_dir/Chart.yaml" | sort -u | while read -r repo_url; do
               [ -z "$repo_url" ] && continue
               # Generate a stable repo name from the URL
               repo_name=$(echo "$repo_url" | sed 's|[^a-zA-Z0-9]|-|g')
