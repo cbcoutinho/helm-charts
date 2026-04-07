@@ -14,6 +14,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable resource limits
 - Grafana dashboard annotations
 
+## nextcloud-mcp-server-0.59.0 (2026-04-07)
+
+### Feat
+
+- **ci**: auto-update artifacthub.io/changes annotation on version bump
+
+### Fix
+
+- **ci**: use yq instead of broken awk for Chart.yaml dependency extraction
+
 ## nextcloud-mcp-server-0.58.29 (2026-04-07)
 
 ### Fix

@@ -2,7 +2,7 @@ apiVersion: v2
 name: nextcloud-mcp-server
 description: A Helm chart for deploying Nextcloud MCP Server - enables AI assistants to interact with Nextcloud
 type: application
-version: 0.58.29
+version: 0.59.0
 appVersion: "0.68.3"
 keywords:
   - nextcloud
@@ -26,14 +26,12 @@ annotations:
   grafana_dashboard: "true"
   grafana_dashboard_folder: "Nextcloud MCP"
   artifacthub.io/changes: |
-    - kind: added
-      description: Login Flow v2 auth mode for Helm chart (ADR-022)
-    - kind: added
-      description: Multi-user BasicAuth guidance in post-install NOTES
-    - kind: added
-      description: Version and changelog info in post-install NOTES
     - kind: changed
-      description: Updated appVersion to 0.64.4
+      description: "clarify chart description"
+    - kind: added
+      description: "auto-update artifacthub.io/changes annotation on version bump"
+    - kind: fixed
+      description: "use yq instead of broken awk for Chart.yaml dependency extraction"
 dependencies:
   - name: qdrant
     version: "1.17.1"
