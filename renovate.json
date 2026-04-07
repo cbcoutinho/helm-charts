@@ -1,0 +1,20 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "semanticCommits": "enabled",
+  "semanticCommitScope": "helm",
+  "semanticCommitType": "build",
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Update appVersion in Chart.yaml when new Docker image is published",
+      "fileMatch": ["charts/nextcloud-mcp-server/Chart\\.yaml$"],
+      "matchStrings": [
+        "appVersion:\\s*\"(?<currentValue>[^\"]+)\""
+      ],
+      "depNameTemplate": "ghcr.io/cbcoutinho/nextcloud-mcp-server",
+      "datasourceTemplate": "docker",
+      "extractVersionTemplate": "^v?(?<version>.*)$"
+    }
+  ]
+}
