@@ -1,0 +1,141 @@
+name: Bump version
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  bump-version:
+    if: "!startsWith(github.event.head_commit.message, 'bump:')"
+    runs-on: ubuntu-latest
+    name: "Bump chart versions and create tags"
+    permissions:
+      contents: write
+    steps:
+      - name: Check out
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          token: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.11"
+
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Detect and bump chart versions
+        id: bump
+        run: |
+          set -euo pipefail
+
+          BUMPED_CHARTS=""
+
+          for chart_dir in charts/*/; do
+            [ -f "$chart_dir/Chart.yaml" ] || continue
+            [ -f "$chart_dir/.cz.toml" ] || continue
+
+            chart_name=$(basename "$chart_dir")
+            echo "::group::Checking chart: $chart_name"
+
+            # Find the most recent tag for this chart
+            last_tag=$(git tag --sort=-creatordate | grep -E "^${chart_name}-[0-9]" | head -n 1 || echo "")
+
+            if [ -z "$last_tag" ]; then
+              echo "No previous tag found for $chart_name, checking all commits"
+              commit_range="HEAD"
+              diff_range=""
+            else
+              echo "Last tag: $last_tag"
+              commit_range="${last_tag}..HEAD"
+              diff_range="$commit_range"
+            fi
+
+            # Check if any files changed under this chart's directory since last tag
+            if [ -n "$diff_range" ]; then
+              changed_files=$(git diff --name-only "$diff_range" -- "$chart_dir" | wc -l)
+            else
+              # No previous tag - consider all files as changed
+              changed_files=$(git ls-files "$chart_dir" | wc -l)
+            fi
+
+            if [ "$changed_files" -eq 0 ]; then
+              echo "No file changes in $chart_dir since $last_tag, skipping"
+              echo "::endgroup::"
+              continue
+            fi
+
+            echo "Found $changed_files changed file(s) in $chart_dir"
+
+            # Attempt commitizen bump
+            bump_output=$(./scripts/bump-chart.sh "$chart_name" 2>&1) || {
+              echo "Error bumping $chart_name"
+              echo "$bump_output"
+              echo "::endgroup::"
+              exit 1
+            }
+            echo "$bump_output"
+
+            # If commitizen found no bump-worthy commits, force a PATCH bump
+            # This handles Renovate's build(helm): commits which don't trigger cz bump
+            if echo "$bump_output" | grep -q "NO_COMMITS_TO_BUMP"; then
+              echo "No bump-worthy commits, forcing PATCH bump for $chart_name"
+              bump_output=$(./scripts/bump-chart.sh "$chart_name" --increment PATCH 2>&1) || {
+                echo "Error forcing PATCH bump for $chart_name"
+                echo "$bump_output"
+                echo "::endgroup::"
+                exit 1
+              }
+              echo "$bump_output"
+            fi
+
+            BUMPED_CHARTS="$BUMPED_CHARTS $chart_name"
+            echo "::endgroup::"
+          done
+
+          if [ -z "$BUMPED_CHARTS" ]; then
+            echo "No charts required version bumps"
+            echo "bumped=false" >> $GITHUB_OUTPUT
+          else
+            echo "Bumped charts:$BUMPED_CHARTS"
+            echo "bumped=true" >> $GITHUB_OUTPUT
+            echo "charts=$BUMPED_CHARTS" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Push changes and tags
+        if: steps.bump.outputs.bumped == 'true'
+        run: |
+          git push
+          git push --tags
+          echo "Pushed tags for charts:${{ steps.bump.outputs.charts }}"
+
+      - name: Summary
+        run: |
+          if [ "${{ steps.bump.outputs.bumped }}" == "true" ]; then
+            echo "## Version Bump Summary" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "The following charts were bumped:" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+
+            for chart in ${{ steps.bump.outputs.charts }}; do
+              tag=$(git tag --sort=-creatordate | grep -E "^${chart}-[0-9]" | head -n 1)
+              echo "- **$chart**: \`$tag\`" >> $GITHUB_STEP_SUMMARY
+            done
+
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Tags have been pushed and release workflows will trigger automatically." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## Version Bump Summary" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "No version bumps required - no chart changes found since last release." >> $GITHUB_STEP_SUMMARY
+          fi
