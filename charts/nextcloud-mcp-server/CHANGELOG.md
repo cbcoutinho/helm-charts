@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable resource limits
 - Grafana dashboard annotations
 
+## nextcloud-mcp-server-0.58.29 (2026-04-07)
+
+### Fix
+
+- **helm**: use uvx for commitizen and PAT for tag pushes
+
 ## nextcloud-mcp-server-0.58.28 (2026-04-05)
 
 ### Fix
