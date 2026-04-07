@@ -1,23 +1,12 @@
 name: Release Charts
 
 on:
-  # Trigger when bump-version workflow completes (since GITHUB_TOKEN
-  # tag pushes don't trigger tag-based workflows)
-  workflow_run:
-    workflows: ["Bump version"]
-    types:
-      - completed
-  # Also allow manual tag pushes to trigger releases
   push:
     tags:
       - "*-[0-9]*.[0-9]*.[0-9]*"
 
 jobs:
   release:
-    # Skip workflow_run triggers where the bump workflow failed or didn't bump
-    if: >-
-      github.event_name == 'push' ||
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     permissions:
       contents: write
     runs-on: ubuntu-latest

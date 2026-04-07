@@ -55,7 +55,7 @@ if [ -n "$INCREMENT" ]; then
 fi
 
 # Build commitizen command
-CZ_CMD="uv run cz --config .cz.toml bump --yes"
+CZ_CMD="uvx --from commitizen cz --config .cz.toml bump --yes"
 if [ -n "$INCREMENT" ]; then
     CZ_CMD="$CZ_CMD --increment $INCREMENT"
 fi
