@@ -77,6 +77,10 @@ jobs:
 
             echo "Found $changed_files changed file(s) in $chart_dir"
 
+            # Update artifacthub.io/changes annotation before cz bump
+            # so the changes are included in commitizen's bump commit
+            ./scripts/update-artifacthub-changes.sh "$chart_name"
+
             # Attempt commitizen bump
             bump_output=$(./scripts/bump-chart.sh "$chart_name" 2>&1) || {
               echo "Error bumping $chart_name"
