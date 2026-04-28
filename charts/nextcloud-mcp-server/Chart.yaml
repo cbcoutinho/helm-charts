@@ -2,7 +2,7 @@ apiVersion: v2
 name: nextcloud-mcp-server
 description: A Helm chart for deploying Nextcloud MCP Server - enables AI assistants to interact with Nextcloud
 type: application
-version: 0.60.1
+version: 0.61.0
 appVersion: "0.72.6"
 keywords:
   - nextcloud
@@ -27,8 +27,8 @@ annotations:
   grafana_dashboard: "true"
   grafana_dashboard_folder: "Nextcloud MCP"
   artifacthub.io/changes: |
-    - kind: fixed
-      description: "trigger dataStorage for qdrant sidecar mode"
+    - kind: added
+      description: "allow storageClass override for login-flow PVC"
 dependencies:
   - name: qdrant
     version: "1.17.1"
