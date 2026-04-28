@@ -117,10 +117,12 @@ Create the name of the secret to use for Login Flow v2
 {{- end }}
 
 {{/*
-Create the name of the PVC to use for OAuth storage
+Create the name of the PVC to use for OAuth / Login Flow storage
 */}}
 {{- define "nextcloud-mcp-server.oauthPvcName" -}}
-{{- if .Values.auth.oauth.persistence.existingClaim }}
+{{- if and (eq .Values.auth.mode "login-flow") .Values.auth.loginFlow.persistence.existingClaim }}
+{{- .Values.auth.loginFlow.persistence.existingClaim }}
+{{- else if .Values.auth.oauth.persistence.existingClaim }}
 {{- .Values.auth.oauth.persistence.existingClaim }}
 {{- else }}
 {{- include "nextcloud-mcp-server.fullname" . }}-oauth-storage

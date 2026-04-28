@@ -310,7 +310,7 @@ spec:
           volumeMounts:
             - name: tmp
               mountPath: /tmp
-            {{- if or (and (eq .Values.auth.mode "oauth") .Values.auth.oauth.persistence.enabled) (eq .Values.auth.mode "login-flow") }}
+            {{- if or (and (eq .Values.auth.mode "oauth") .Values.auth.oauth.persistence.enabled) (and (eq .Values.auth.mode "login-flow") .Values.auth.loginFlow.persistence.enabled) }}
             - name: oauth-storage
               mountPath: /app/.oauth
             {{- end }}
@@ -358,7 +358,7 @@ spec:
       volumes:
         - name: tmp
           emptyDir: {}
-        {{- if or (and (eq .Values.auth.mode "oauth") .Values.auth.oauth.persistence.enabled) (eq .Values.auth.mode "login-flow") }}
+        {{- if or (and (eq .Values.auth.mode "oauth") .Values.auth.oauth.persistence.enabled) (and (eq .Values.auth.mode "login-flow") .Values.auth.loginFlow.persistence.enabled) }}
         - name: oauth-storage
           persistentVolumeClaim:
             claimName: {{ include "nextcloud-mcp-server.oauthPvcName" . }}

@@ -154,6 +154,16 @@ auth:
     existingSecret: ""
     # Key in the existing secret
     tokenEncryptionKeyKey: "token_encryption_key"
+    # Persistent storage for Login Flow v2 / OAuth client registration data
+    # Mounted at /app/.oauth and required when auth.mode is "login-flow"
+    persistence:
+      enabled: true
+      # Storage class (leave empty for default)
+      storageClass: ""
+      accessMode: ReadWriteOnce
+      size: 100Mi
+      # Use existing PVC
+      existingClaim: ""
 
 # Data Storage Configuration
 # Persistent volume for /app/data directory
