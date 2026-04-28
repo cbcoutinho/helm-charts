@@ -21,5 +21,11 @@ spec:
       protocol: TCP
       name: metrics
     {{- end }}
+    {{- if eq .Values.qdrant.mode "sidecar" }}
+    - port: 6333
+      targetPort: qdrant-http
+      protocol: TCP
+      name: qdrant-metrics
+    {{- end }}
   selector:
     {{- include "nextcloud-mcp-server.selectorLabels" . | nindent 4 }}

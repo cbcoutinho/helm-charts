@@ -29,4 +29,20 @@ spec:
         # Add service label
         - sourceLabels: [__meta_kubernetes_service_name]
           targetLabel: service
+    {{- if eq .Values.qdrant.mode "sidecar" }}
+    - port: qdrant-metrics
+      path: /metrics
+      interval: {{ .Values.serviceMonitor.interval }}
+      scrapeTimeout: {{ .Values.serviceMonitor.scrapeTimeout }}
+      scheme: http
+      relabelings:
+        - sourceLabels: [__meta_kubernetes_namespace]
+          targetLabel: namespace
+        - sourceLabels: [__meta_kubernetes_pod_name]
+          targetLabel: pod
+        - sourceLabels: [__meta_kubernetes_service_name]
+          targetLabel: service
+        - targetLabel: container
+          replacement: qdrant
+    {{- end }}
 {{- end }}
