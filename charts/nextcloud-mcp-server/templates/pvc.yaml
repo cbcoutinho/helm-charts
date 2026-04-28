@@ -16,7 +16,7 @@ spec:
       storage: {{ .Values.auth.oauth.persistence.size }}
 {{- end }}
 ---
-{{- if eq .Values.auth.mode "login-flow" }}
+{{- if and (eq .Values.auth.mode "login-flow") .Values.auth.loginFlow.persistence.enabled (not .Values.auth.loginFlow.persistence.existingClaim) }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -25,10 +25,13 @@ metadata:
     {{- include "nextcloud-mcp-server.labels" . | nindent 4 }}
 spec:
   accessModes:
-    - ReadWriteOnce
+    - {{ .Values.auth.loginFlow.persistence.accessMode }}
+  {{- if .Values.auth.loginFlow.persistence.storageClass }}
+  storageClassName: {{ .Values.auth.loginFlow.persistence.storageClass }}
+  {{- end }}
   resources:
     requests:
-      storage: 100Mi
+      storage: {{ .Values.auth.loginFlow.persistence.size }}
 {{- end }}
 ---
 {{- if and (eq (include "nextcloud-mcp-server.dataStorageEnabled" .) "true") (not .Values.dataStorage.existingClaim) }}
