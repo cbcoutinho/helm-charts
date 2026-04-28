@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable resource limits
 - Grafana dashboard annotations
 
+## nextcloud-mcp-server-0.60.0 (2026-04-28)
+
+### Feat
+
+- **helm**: add qdrant sidecar mode and let upstream manage subchart image
+
 ## nextcloud-mcp-server-0.59.4 (2026-04-27)
 
 ## nextcloud-mcp-server-0.59.3 (2026-04-08)
