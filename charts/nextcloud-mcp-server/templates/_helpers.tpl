@@ -173,6 +173,8 @@ true
 true
 {{- else if and (eq .Values.qdrant.mode "persistent") .Values.qdrant.localPersistence.enabled -}}
 true
+{{- else if eq .Values.qdrant.mode "sidecar" -}}
+true
 {{- else -}}
 false
 {{- end -}}

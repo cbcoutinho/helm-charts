@@ -464,8 +464,8 @@ qdrant:
 
   # Sidecar mode configuration (only used when mode: "sidecar")
   # Runs Qdrant as a sidecar container in the same pod. The MCP server
-  # connects via localhost:6333. Data is stored under /app/data/qdrant
-  # in the dataStorage volume — set dataStorage.enabled: true for persistence.
+  # connects via localhost:6333. Sidecar data is automatically persisted
+  # via the dataStorage volume (PVC mounted at /qdrant/storage subPath qdrant).
   sidecar:
     image:
       repository: docker.io/qdrant/qdrant
