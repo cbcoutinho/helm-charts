@@ -15,6 +15,16 @@
       "depNameTemplate": "ghcr.io/cbcoutinho/nextcloud-mcp-server",
       "datasourceTemplate": "docker",
       "extractVersionTemplate": "^v?(?<version>.*)$"
+    },
+    {
+      "customType": "regex",
+      "description": "Update inline-annotated docker tags in values.yaml (e.g. qdrant sidecar)",
+      "fileMatch": ["charts/.+/values\\.yaml$"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>[^\\s]+)(?: versioning=(?<versioning>[^\\s]+))?\\s+tag:\\s*\"?(?<currentValue>[^\"\\s]+)\"?"
+      ],
+      "versioningTemplate": "{{#if versioning}}{{versioning}}{{else}}semver{{/if}}",
+      "extractVersionTemplate": "^v?(?<version>.*)$"
     }
   ]
 }

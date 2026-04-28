@@ -431,14 +431,16 @@ documentChunking:
   chunkOverlap: 50
 
 # Qdrant Vector Database Configuration
-# Three deployment modes available:
+# Four deployment modes available:
 # 1. Local In-Memory: Fast, ephemeral, zero-config (mode: "memory")
 # 2. Local Persistent: File-based, survives restarts (mode: "persistent")
-# 3. Network: Dedicated Qdrant service, production-ready (mode: "network")
+# 3. Sidecar: Qdrant container in the same pod, accessed via localhost (mode: "sidecar")
+# 4. Network: Dedicated Qdrant service, production-ready (mode: "network")
 qdrant:
-  # Qdrant mode: "memory", "persistent", or "network"
+  # Qdrant mode: "memory", "persistent", "sidecar", or "network"
   # - memory: In-memory storage (:memory:) - default, zero config, data lost on restart
   # - persistent: Local file storage - data persists across restarts, suitable for small/medium deployments
+  # - sidecar: Qdrant runs as a sidecar container, accessed via localhost (single-pod deployments)
   # - network: Dedicated Qdrant service (see networkMode below)
   mode: "memory"
 
@@ -460,6 +462,41 @@ qdrant:
     # Use existing PVC
     existingClaim: ""
 
+  # Sidecar mode configuration (only used when mode: "sidecar")
+  # Runs Qdrant as a sidecar container in the same pod. The MCP server
+  # connects via localhost:6333. Data is stored under /app/data/qdrant
+  # in the dataStorage volume — set dataStorage.enabled: true for persistence.
+  sidecar:
+    image:
+      repository: docker.io/qdrant/qdrant
+      # renovate: datasource=docker depName=qdrant/qdrant
+      tag: "v1.17.1"
+      pullPolicy: IfNotPresent
+    # Resources for the qdrant sidecar
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+    # Optional API key for sidecar authentication (rarely needed since
+    # only the same-pod MCP server can reach it)
+    apiKey: ""
+    # Use existing secret for API key
+    existingSecret: ""
+    secretKey: "api-key"
+    # Security context for the qdrant sidecar container
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 2000
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop:
+          - ALL
+
   # Network mode configuration (only used when mode: "network")
   networkMode:
     # Deploy Qdrant as a subchart (if true) or use external Qdrant (if false)
@@ -475,13 +512,13 @@ qdrant:
 
   # Qdrant subchart configuration (only used when mode: "network" and networkMode.deploySubchart: true)
   # All values are passed through to the qdrant/qdrant chart.
+  # The Qdrant image tag is intentionally not set here so the subchart's
+  # appVersion (managed by upstream and tracked via Renovate against
+  # Chart.yaml dependencies) is used.
   # See https://github.com/qdrant/qdrant-helm for full configuration options.
   subchart:
     # Number of Qdrant replicas
     replicaCount: 1
-    image:
-      # Qdrant version
-      tag: v1.12.5
     config:
       cluster:
         # Enable distributed cluster mode

@@ -253,20 +253,31 @@ Enable semantic search capabilities with BM25 hybrid search by deploying a vecto
 
 **Qdrant Vector Database:**
 
-Qdrant is deployed as a subchart when `qdrant.enabled` is `true`. All configuration values are passed through to the [qdrant/qdrant](https://github.com/qdrant/qdrant-helm) chart.
+Qdrant supports four deployment modes via `qdrant.mode`:
+
+| Mode | Description | When to Use |
+|------|-------------|-------------|
+| `memory` | In-memory (`:memory:`), zero config | Development, small ephemeral workloads |
+| `persistent` | Local file storage in `/app/data/qdrant` | Single-pod with persistent volume |
+| `sidecar` | Qdrant runs as a sidecar container reachable on `localhost` | Single-pod with no external dependency, full Qdrant features |
+| `network` | External Qdrant service or `qdrant/qdrant` subchart | Production, shared/scaled Qdrant |
+
+**Sidecar mode** (`qdrant.mode: sidecar`) deploys the upstream `qdrant/qdrant` image alongside the MCP server container in the same pod. The MCP server connects via `localhost:6333`, and persistence piggybacks on `dataStorage` (set `dataStorage.enabled: true` for durability). The qdrant `/metrics` endpoint is exposed through the Service and ServiceMonitor automatically.
+
+The `sidecar.image.tag` is tracked by Renovate; the `network` subchart's image is governed by the upstream qdrant Helm chart and is not overridden here.
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
-| `qdrant.enabled` | Deploy Qdrant as a subchart | `false` |
-| `qdrant.replicaCount` | Number of Qdrant replicas | `1` |
-| `qdrant.image.tag` | Qdrant version | `v1.12.5` |
-| `qdrant.apiKey` | Optional API key for authentication | `""` |
-| `qdrant.persistence.size` | Storage size for vector data | `10Gi` |
-| `qdrant.persistence.storageClass` | Storage class | `""` |
-| `qdrant.resources.requests.cpu` | CPU request | `200m` |
-| `qdrant.resources.requests.memory` | Memory request | `512Mi` |
-| `qdrant.resources.limits.cpu` | CPU limit | `1000m` |
-| `qdrant.resources.limits.memory` | Memory limit | `2Gi` |
+| `qdrant.mode` | Deployment mode (`memory`, `persistent`, `sidecar`, `network`) | `memory` |
+| `qdrant.collection` | Collection name for vector data | `nextcloud_content` |
+| `qdrant.sidecar.image.repository` | Sidecar image repository | `docker.io/qdrant/qdrant` |
+| `qdrant.sidecar.image.tag` | Sidecar image tag (Renovate-managed) | `v1.17.1` |
+| `qdrant.sidecar.apiKey` | Optional API key for sidecar (rarely needed) | `""` |
+| `qdrant.sidecar.resources` | Resources for the sidecar container | See `values.yaml` |
+| `qdrant.networkMode.deploySubchart` | Deploy `qdrant/qdrant` as a subchart | `false` |
+| `qdrant.networkMode.externalUrl` | External Qdrant URL (when `deploySubchart: false`) | `""` |
+| `qdrant.subchart.persistence.size` | Storage size when subchart is deployed | `10Gi` |
+| `qdrant.subchart.resources` | Resources for the qdrant subchart | See `values.yaml` |
 
 **Ollama Embedding Service:**
 

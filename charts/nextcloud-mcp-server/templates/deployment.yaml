@@ -232,6 +232,17 @@ spec:
                   name: {{ .Values.qdrant.networkMode.existingSecret | default (printf "%s-qdrant" .Release.Name) }}
                   key: {{ .Values.qdrant.networkMode.secretKey }}
             {{- end }}
+            {{- else if eq .Values.qdrant.mode "sidecar" }}
+            # Sidecar mode: Qdrant runs in the same pod, reachable on localhost
+            - name: QDRANT_URL
+              value: "http://localhost:6333"
+            {{- if or .Values.qdrant.sidecar.apiKey .Values.qdrant.sidecar.existingSecret }}
+            - name: QDRANT_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "nextcloud-mcp-server.qdrantSidecarSecretName" . }}
+                  key: {{ .Values.qdrant.sidecar.secretKey }}
+            {{- end }}
             {{- else if eq .Values.qdrant.mode "persistent" }}
             # Persistent local mode: File-based storage
             - name: QDRANT_LOCATION
@@ -308,6 +319,42 @@ spec:
             {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
+        {{- if eq .Values.qdrant.mode "sidecar" }}
+        - name: qdrant
+          image: "{{ .Values.qdrant.sidecar.image.repository }}:{{ .Values.qdrant.sidecar.image.tag }}"
+          imagePullPolicy: {{ .Values.qdrant.sidecar.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.qdrant.sidecar.securityContext | nindent 12 }}
+          ports:
+            - name: qdrant-http
+              containerPort: 6333
+              protocol: TCP
+            - name: qdrant-grpc
+              containerPort: 6334
+              protocol: TCP
+          {{- if or .Values.qdrant.sidecar.apiKey .Values.qdrant.sidecar.existingSecret }}
+          env:
+            - name: QDRANT__SERVICE__API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "nextcloud-mcp-server.qdrantSidecarSecretName" . }}
+                  key: {{ .Values.qdrant.sidecar.secretKey }}
+          {{- end }}
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: qdrant-http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            {{- toYaml .Values.qdrant.sidecar.resources | nindent 12 }}
+          volumeMounts:
+            - name: data-storage
+              mountPath: /qdrant/storage
+              subPath: qdrant
+            - name: qdrant-snapshots
+              mountPath: /qdrant/snapshots
+        {{- end }}
       volumes:
         - name: tmp
           emptyDir: {}
@@ -321,6 +368,10 @@ spec:
           persistentVolumeClaim:
             claimName: {{ include "nextcloud-mcp-server.dataStoragePvcName" . }}
         {{- else }}
+          emptyDir: {}
+        {{- end }}
+        {{- if eq .Values.qdrant.mode "sidecar" }}
+        - name: qdrant-snapshots
           emptyDir: {}
         {{- end }}
         {{- with .Values.volumes }}

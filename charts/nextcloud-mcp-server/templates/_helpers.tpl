@@ -150,6 +150,17 @@ Create the name of the PVC to use for /app/data storage
 {{- end }}
 
 {{/*
+Create the name of the secret to use for Qdrant sidecar API key
+*/}}
+{{- define "nextcloud-mcp-server.qdrantSidecarSecretName" -}}
+{{- if .Values.qdrant.sidecar.existingSecret }}
+{{- .Values.qdrant.sidecar.existingSecret }}
+{{- else }}
+{{- include "nextcloud-mcp-server.fullname" . }}-qdrant-sidecar
+{{- end }}
+{{- end }}
+
+{{/*
 Determine if data storage PVC should be enabled (backward compatible)
 Checks new dataStorage.enabled OR legacy persistence configs
 */}}
