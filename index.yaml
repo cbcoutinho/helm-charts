@@ -4,6 +4,50 @@ entries:
   - annotations:
       artifacthub.io/changes: |
         - kind: changed
+          description: "update helm release ollama to v1.56.0"
+      grafana_dashboard: "true"
+      grafana_dashboard_folder: Nextcloud MCP
+    apiVersion: v2
+    appVersion: 0.79.2
+    created: "2026-05-08T18:00:08.311044586Z"
+    dependencies:
+    - condition: qdrant.networkMode.deploySubchart
+      name: qdrant
+      repository: https://qdrant.github.io/qdrant-helm
+      version: 1.17.1
+    - condition: ollama.enabled
+      name: ollama
+      repository: https://otwld.github.io/ollama-helm
+      version: 1.56.0
+    description: A Helm chart for deploying Nextcloud MCP Server - enables AI assistants
+      to interact with Nextcloud
+    digest: 1a9b031746d1a3309ea138c7e04c797ebf4a79f4a4273625e719a85f66295d40
+    home: https://github.com/cbcoutinho/nextcloud-mcp-server
+    icon: https://raw.githubusercontent.com/nextcloud/server/master/core/img/logo/logo.svg
+    keywords:
+    - nextcloud
+    - mcp
+    - model-context-protocol
+    - llm
+    - ai
+    - claude
+    - webdav
+    - caldav
+    - carddav
+    - helm
+    maintainers:
+    - email: chris@coutinho.io
+      name: Chris Coutinho
+    name: nextcloud-mcp-server
+    sources:
+    - https://github.com/cbcoutinho/nextcloud-mcp-server
+    type: application
+    urls:
+    - https://github.com/cbcoutinho/helm-charts/releases/download/nextcloud-mcp-server-0.61.5/nextcloud-mcp-server-0.61.5.tgz
+    version: 0.61.5
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: changed
           description: "update docker.io/qdrant/qdrant docker tag to v1.18.0"
       grafana_dashboard: "true"
       grafana_dashboard_folder: Nextcloud MCP
@@ -493,4 +537,4 @@ entries:
     urls:
     - https://github.com/cbcoutinho/helm-charts/releases/download/nextcloud-mcp-server-0.59.1/nextcloud-mcp-server-0.59.1.tgz
     version: 0.59.1
-generated: "2026-05-08T17:56:36.292416744Z"
+generated: "2026-05-08T18:00:08.311090148Z"
