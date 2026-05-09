@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable resource limits
 - Grafana dashboard annotations
 
+## nextcloud-mcp-server-0.61.6 (2026-05-09)
+
+### Fix
+
+- **nextcloud-mcp-server**: use dot-separated OAuth scopes
+
 ## nextcloud-mcp-server-0.61.5 (2026-05-08)
 
 ## nextcloud-mcp-server-0.61.4 (2026-05-08)
