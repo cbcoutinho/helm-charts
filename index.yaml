@@ -3,6 +3,52 @@ entries:
   nextcloud-mcp-server:
   - annotations:
       artifacthub.io/changes: |
+        - kind: fixed
+          description: "use dot-separated OAuth scopes"
+        - kind: changed
+          description: "update ghcr.io/cbcoutinho/nextcloud-mcp-server docker tag to v0.83.2"
+      grafana_dashboard: "true"
+      grafana_dashboard_folder: Nextcloud MCP
+    apiVersion: v2
+    appVersion: 0.83.2
+    created: "2026-05-09T19:11:08.903069873Z"
+    dependencies:
+    - condition: qdrant.networkMode.deploySubchart
+      name: qdrant
+      repository: https://qdrant.github.io/qdrant-helm
+      version: 1.17.1
+    - condition: ollama.enabled
+      name: ollama
+      repository: https://otwld.github.io/ollama-helm
+      version: 1.56.0
+    description: A Helm chart for deploying Nextcloud MCP Server - enables AI assistants
+      to interact with Nextcloud
+    digest: a4609f1baf902cf375038f594ef68588d54efc3683f6d1d5ce6b0e4ead8e5574
+    home: https://github.com/cbcoutinho/nextcloud-mcp-server
+    icon: https://raw.githubusercontent.com/nextcloud/server/master/core/img/logo/logo.svg
+    keywords:
+    - nextcloud
+    - mcp
+    - model-context-protocol
+    - llm
+    - ai
+    - claude
+    - webdav
+    - caldav
+    - carddav
+    - helm
+    maintainers:
+    - email: chris@coutinho.io
+      name: Chris Coutinho
+    name: nextcloud-mcp-server
+    sources:
+    - https://github.com/cbcoutinho/nextcloud-mcp-server
+    type: application
+    urls:
+    - https://github.com/cbcoutinho/helm-charts/releases/download/nextcloud-mcp-server-0.61.6/nextcloud-mcp-server-0.61.6.tgz
+    version: 0.61.6
+  - annotations:
+      artifacthub.io/changes: |
         - kind: changed
           description: "update helm release ollama to v1.56.0"
       grafana_dashboard: "true"
@@ -537,4 +583,4 @@ entries:
     urls:
     - https://github.com/cbcoutinho/helm-charts/releases/download/nextcloud-mcp-server-0.59.1/nextcloud-mcp-server-0.59.1.tgz
     version: 0.59.1
-generated: "2026-05-08T18:00:08.311090148Z"
+generated: "2026-05-09T19:11:08.903164371Z"
