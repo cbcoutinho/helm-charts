@@ -275,6 +275,22 @@ spec:
               value: {{ .Values.openai.baseUrl | quote }}
             {{- end }}
             {{- end }}
+            # Mistral Embedding Provider (first-class, distinct from OpenAI)
+            {{- if .Values.mistral.enabled }}
+            - name: MISTRAL_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.mistral.existingSecret | default (printf "%s-mistral" (include "nextcloud-mcp-server.fullname" .)) }}
+                  key: {{ .Values.mistral.secretKey }}
+            {{- if .Values.mistral.embeddingModel }}
+            - name: MISTRAL_EMBEDDING_MODEL
+              value: {{ .Values.mistral.embeddingModel | quote }}
+            {{- end }}
+            {{- if .Values.mistral.baseUrl }}
+            - name: MISTRAL_BASE_URL
+              value: {{ .Values.mistral.baseUrl | quote }}
+            {{- end }}
+            {{- end }}
             # Observability
             - name: METRICS_ENABLED
               value: {{ .Values.observability.metrics.enabled | quote }}
