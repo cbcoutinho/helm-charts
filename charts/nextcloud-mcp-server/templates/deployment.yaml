@@ -151,6 +151,26 @@ spec:
                 secretKeyRef:
                   name: {{ include "nextcloud-mcp-server.loginFlowSecretName" . }}
                   key: {{ .Values.auth.loginFlow.tokenEncryptionKeyKey }}
+            {{- if or .Values.auth.loginFlow.clientId .Values.auth.loginFlow.oidcExistingSecret }}
+            # OIDC client creds. The MCP-client ↔ MCP-server leg uses
+            # OAuth/OIDC; the server's setup_oauth_config requires
+            # NEXTCLOUD_OIDC_CLIENT_ID / _SECRET unless the OIDC provider
+            # supports Dynamic Client Registration. Set clientId (inline)
+            # or oidcExistingSecret to opt in. Static-creds users where
+            # token-encryption-key + OIDC creds live in one Secret should
+            # set both `existingSecret` and `oidcExistingSecret` to that
+            # Secret name.
+            - name: NEXTCLOUD_OIDC_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "nextcloud-mcp-server.loginFlowOidcSecretName" . }}
+                  key: {{ .Values.auth.loginFlow.clientIdKey }}
+            - name: NEXTCLOUD_OIDC_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "nextcloud-mcp-server.loginFlowOidcSecretName" . }}
+                  key: {{ .Values.auth.loginFlow.clientSecretKey }}
+            {{- end }}
             {{- end }}
             {{- if .Values.documentProcessing.enabled }}
             # Document processing

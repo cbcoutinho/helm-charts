@@ -160,6 +160,24 @@ auth:
     existingSecret: ""
     # Key in the existing secret
     tokenEncryptionKeyKey: "token_encryption_key"
+    # OIDC client credentials. Login-flow mode authenticates the MCP
+    # client ↔ MCP server leg via OAuth/OIDC against the customer's
+    # Nextcloud, so NEXTCLOUD_OIDC_CLIENT_ID / _SECRET are required
+    # whenever the OIDC provider doesn't support Dynamic Client
+    # Registration. Provide either inline (clientId / clientSecret —
+    # rendered into the same Secret as tokenEncryptionKey) or via an
+    # existing Secret (oidcExistingSecret — falls back to
+    # `existingSecret` above when unset, so a single Secret can hold
+    # both keys).
+    clientId: ""
+    clientSecret: ""
+    # When set, OIDC client creds are read from this Secret instead
+    # of `existingSecret`. Useful when token-encryption-key and OIDC
+    # creds are provisioned by different controllers (e.g., one ESO
+    # ExternalSecret per upstream source).
+    oidcExistingSecret: ""
+    clientIdKey: "client_id"
+    clientSecretKey: "client_secret"
     # Persistent storage for Login Flow v2 / OAuth client registration data
     # Mounted at /app/.oauth and required when auth.mode is "login-flow"
     persistence:
