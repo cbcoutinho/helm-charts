@@ -117,6 +117,21 @@ Create the name of the secret to use for Login Flow v2
 {{- end }}
 
 {{/*
+Create the name of the Secret to use for Login Flow v2 OIDC client creds.
+Falls back to loginFlowSecretName when oidcExistingSecret is not set, so the
+common case (single Secret holding both token-encryption-key and OIDC creds)
+just works. Override `oidcExistingSecret` to point at a separate Secret
+provisioned by a different controller.
+*/}}
+{{- define "nextcloud-mcp-server.loginFlowOidcSecretName" -}}
+{{- if .Values.auth.loginFlow.oidcExistingSecret }}
+{{- .Values.auth.loginFlow.oidcExistingSecret }}
+{{- else }}
+{{- include "nextcloud-mcp-server.loginFlowSecretName" . }}
+{{- end }}
+{{- end }}
+
+{{/*
 Create the name of the PVC to use for OAuth / Login Flow storage
 */}}
 {{- define "nextcloud-mcp-server.oauthPvcName" -}}
