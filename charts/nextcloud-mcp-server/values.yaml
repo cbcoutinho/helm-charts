@@ -49,6 +49,21 @@ auth:
   # login-flow: Multi-user via Nextcloud Login Flow v2 (experimental, ADR-022)
   mode: basic
 
+  # Shared OIDC configuration. Applies regardless of auth.mode and is
+  # surfaced unchanged via the MCP server's GET /api/v1/status response
+  # (under `oidc.discovery_url`). Astrolabe and other MCP clients consume
+  # that field to skip their own localhost-based discovery fallback —
+  # critical when the MCP client (e.g. an Astrolabe Nextcloud app) runs
+  # on a managed Nextcloud that has no local Apache to curl into.
+  oidc:
+    # Full OpenID Connect discovery URL of the OIDC provider this MCP
+    # server delegates to. Leave empty if the MCP server's downstream
+    # IdP is the same Nextcloud the MCP client already talks to and you
+    # are happy for clients to construct the discovery URL themselves.
+    # Example: "https://cloud.example.com/index.php/apps/oidc/.well-known/openid-configuration"
+    # Maps to the OIDC_DISCOVERY_URL env var read by the MCP server.
+    discoveryUrl: ""
+
   # Basic authentication settings (single-user mode)
   basic:
     # Nextcloud username (ignored if existingSecret is set)
