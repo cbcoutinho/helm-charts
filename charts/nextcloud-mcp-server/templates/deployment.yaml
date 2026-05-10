@@ -172,6 +172,12 @@ spec:
                   key: {{ .Values.auth.loginFlow.clientSecretKey }}
             {{- end }}
             {{- end }}
+            {{- with .Values.auth.oidc.discoveryUrl }}
+            # OIDC discovery URL advertised to MCP clients via /api/v1/status
+            # so they can skip their own localhost-based discovery fallback.
+            - name: OIDC_DISCOVERY_URL
+              value: {{ . | quote }}
+            {{- end }}
             {{- if .Values.documentProcessing.enabled }}
             # Document processing
             - name: ENABLE_DOCUMENT_PROCESSING

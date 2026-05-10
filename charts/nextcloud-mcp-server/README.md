@@ -117,6 +117,7 @@ ingress:
 | `auth.oauth.clientSecret` | OAuth client secret (OAuth mode, optional) | `""` |
 | `auth.oauth.persistence.enabled` | Enable persistent storage for OAuth | `true` |
 | `auth.oauth.persistence.size` | Size of OAuth storage PVC | `100Mi` |
+| `auth.oidc.discoveryUrl` | OIDC discovery URL advertised on `/api/v1/status` (mode-agnostic); set to your Nextcloud OIDC discovery URL so MCP clients on managed NC skip their localhost discovery fallback | `""` |
 
 #### Data Storage
 
