@@ -604,3 +604,30 @@ openai:
   secretKey: "api-key"
   # Optional custom API endpoint (e.g., for Azure OpenAI or local compatible services)
   baseUrl: ""
+
+# Mistral Embedding Provider (first-class — distinct from OpenAI compat)
+# `nextcloud_mcp_server.providers.mistral` is a first-class provider in the
+# upstream server's provider registry; selection priority is
+# Bedrock → OpenAI → Mistral → Ollama → Simple. MISTRAL_API_KEY alone is
+# enough to enable it; embeddingModel defaults to "mistral-embed".
+# Prefer this block over routing Mistral through `openai.baseUrl` — that
+# compat path requires extra env vars and isn't what the upstream tests
+# against.
+mistral:
+  # Enable Mistral embedding provider
+  enabled: false
+  # Mistral API key (only used if existingSecret is not set)
+  apiKey: ""
+  # Name of existing secret containing the API key
+  existingSecret: ""
+  # Key in the secret that contains the API key
+  secretKey: "api-key"
+  # Embedding model to use. Defaults to mistral-embed (1024 dimensions).
+  # See https://docs.mistral.ai/capabilities/embeddings/ for the up-to-
+  # date list. The MCP server's `MISTRAL_EMBEDDING_DIMENSIONS` map only
+  # lists known models — pin to one of those to avoid the simple
+  # fallback dimension.
+  embeddingModel: "mistral-embed"
+  # Optional custom API endpoint. Leave empty to use Mistral's default
+  # (https://api.mistral.ai/v1).
+  baseUrl: ""
