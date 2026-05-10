@@ -3,6 +3,50 @@ entries:
   nextcloud-mcp-server:
   - annotations:
       artifacthub.io/changes: |
+        - kind: added
+          description: "add first-class Mistral embedding provider block"
+      grafana_dashboard: "true"
+      grafana_dashboard_folder: Nextcloud MCP
+    apiVersion: v2
+    appVersion: 0.83.2
+    created: "2026-05-10T09:52:07.806898612Z"
+    dependencies:
+    - condition: qdrant.networkMode.deploySubchart
+      name: qdrant
+      repository: https://qdrant.github.io/qdrant-helm
+      version: 1.17.1
+    - condition: ollama.enabled
+      name: ollama
+      repository: https://otwld.github.io/ollama-helm
+      version: 1.56.0
+    description: A Helm chart for deploying Nextcloud MCP Server - enables AI assistants
+      to interact with Nextcloud
+    digest: ce77e045f4b66ad530b6385ef2f8bb6ea53861fa37752010ad0d89ef09b07b3a
+    home: https://github.com/cbcoutinho/nextcloud-mcp-server
+    icon: https://raw.githubusercontent.com/nextcloud/server/master/core/img/logo/logo.svg
+    keywords:
+    - nextcloud
+    - mcp
+    - model-context-protocol
+    - llm
+    - ai
+    - claude
+    - webdav
+    - caldav
+    - carddav
+    - helm
+    maintainers:
+    - email: chris@coutinho.io
+      name: Chris Coutinho
+    name: nextcloud-mcp-server
+    sources:
+    - https://github.com/cbcoutinho/nextcloud-mcp-server
+    type: application
+    urls:
+    - https://github.com/cbcoutinho/helm-charts/releases/download/nextcloud-mcp-server-0.62.0/nextcloud-mcp-server-0.62.0.tgz
+    version: 0.62.0
+  - annotations:
+      artifacthub.io/changes: |
         - kind: fixed
           description: "use dot-separated OAuth scopes"
         - kind: changed
@@ -583,4 +627,4 @@ entries:
     urls:
     - https://github.com/cbcoutinho/helm-charts/releases/download/nextcloud-mcp-server-0.59.1/nextcloud-mcp-server-0.59.1.tgz
     version: 0.59.1
-generated: "2026-05-09T19:11:08.903164371Z"
+generated: "2026-05-10T09:52:07.807007195Z"
