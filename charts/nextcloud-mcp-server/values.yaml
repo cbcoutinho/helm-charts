@@ -208,6 +208,11 @@ auth:
 # Persistent volume for /app/data directory
 # Used for: token databases, qdrant persistent storage, and any app data
 # When disabled, uses emptyDir (non-persistent, but still writable)
+#
+# Tip: when `database.url` or `database.existingSecret` is set the MCP
+# server points at a centralized DB and no longer needs a PVC for token
+# storage. You can still leave dataStorage enabled if Qdrant persistent
+# mode (or another consumer) needs /app/data.
 dataStorage:
   # Enable persistent storage for /app/data
   # Set to true when using:
@@ -215,7 +220,8 @@ dataStorage:
   # - Login flow mode (stores app passwords in tokens.db)
   # - Qdrant persistent mode (stores vector database)
   # - Any feature requiring persistent app data
-  # Set to false for basic auth without persistence (uses emptyDir)
+  # Set to false for basic auth without persistence (uses emptyDir),
+  # or when delegating token storage to `database` below.
   enabled: false
   # Storage class (leave empty for default)
   storageClass: ""
@@ -225,6 +231,26 @@ dataStorage:
   size: 1Gi
   # Use existing PVC
   existingClaim: ""
+
+# Centralized database backend (ADR-026)
+# When set, the MCP server stores all tokens / sessions / app passwords in
+# a shared SQL database instead of a local SQLite file. Required for HA
+# deployments with replicaCount > 1 so pods can be stateless.
+#
+# Bring-your-own DB — this chart does NOT provision Postgres. Use CNPG,
+# RDS, your existing Postgres sub-chart, etc.
+#
+# Encryption is unchanged: TOKEN_ENCRYPTION_KEY is still required and
+# applied in Python; the database only sees ciphertext.
+database:
+  # Inline URL (DO NOT USE in production — credentials end up in plaintext).
+  # Useful for local dev or quick experiments. Prefer existingSecret.
+  url: ""
+  # Reference an existing Secret holding the SQLAlchemy URL. Recommended.
+  # The Secret must contain the key named below with a value like:
+  #   postgresql+asyncpg://user:password@host:5432/dbname
+  existingSecret: ""
+  existingSecretKey: "DATABASE_URL"
 
 # MCP server configuration
 mcp:

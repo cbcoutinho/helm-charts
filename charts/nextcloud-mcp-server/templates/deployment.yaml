@@ -69,6 +69,21 @@ spec:
             # Nextcloud connection
             - name: NEXTCLOUD_HOST
               value: {{ .Values.nextcloud.host | quote }}
+            {{- if or .Values.database.url .Values.database.existingSecret }}
+            # Centralized database backend (ADR-026). Wins over the
+            # TOKEN_STORAGE_DB local-SQLite path that each auth mode sets
+            # below; the MCP server reads DATABASE_URL first and falls back
+            # to TOKEN_STORAGE_DB only when DATABASE_URL is unset.
+            - name: DATABASE_URL
+              {{- if .Values.database.existingSecret }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.existingSecret | quote }}
+                  key: {{ .Values.database.existingSecretKey | quote }}
+              {{- else }}
+              value: {{ .Values.database.url | quote }}
+              {{- end }}
+            {{- end }}
             {{- if eq .Values.auth.mode "basic" }}
             # Basic auth mode (single-user)
             - name: NEXTCLOUD_USERNAME
