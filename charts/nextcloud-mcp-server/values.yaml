@@ -252,6 +252,34 @@ database:
   existingSecret: ""
   existingSecretKey: "DATABASE_URL"
 
+  # TLS verification for the Postgres backend (ADR-026).
+  # Unset (default) → asyncpg's `prefer` mode (TLS if offered, no
+  # verification — works for cluster-internal Postgres without TLS).
+  # "true" → full cert verification. "false" → silence cert errors
+  # (homelab / self-signed). Prefer caBundle over "false" for production.
+  verifySsl: ""
+
+  # Path *inside the container* to a PEM file containing a private CA.
+  # Implies verifySsl=true. Either set this directly (when you're
+  # already mounting certs from elsewhere) or use caBundleSecret below
+  # to have the chart mount a Secret for you.
+  caBundle: ""
+
+  # Mount a Secret as the CA bundle file and auto-set caBundle to the
+  # in-container path. Operator-friendly path: store the CA in a Secret
+  # alongside the DATABASE_URL Secret and reference both from values.
+  caBundleSecret:
+    name: ""
+    key: ""
+    mountPath: "/etc/ssl/database-ca.crt"
+
+  # SQLAlchemy connection pool sizing (ADR-026). Max per-pod
+  # connections = poolSize + maxOverflow. With many replicas this can
+  # blow past managed-Postgres `max_connections=100`; tune down for
+  # large fleets. Empty = server default (10 / 20).
+  poolSize: ""
+  maxOverflow: ""
+
 # MCP server configuration
 mcp:
   # Transport mode (default: streamable-http for SSE)
