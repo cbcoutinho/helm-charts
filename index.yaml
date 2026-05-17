@@ -4,6 +4,52 @@ entries:
   - annotations:
       artifacthub.io/changes: |
         - kind: fixed
+          description: "bump appVersion 0.87.0 → 0.87.1"
+        - kind: changed
+          description: "update dependency python to 3.14"
+      grafana_dashboard: "true"
+      grafana_dashboard_folder: Nextcloud MCP
+    apiVersion: v2
+    appVersion: 0.87.1
+    created: "2026-05-17T16:57:02.489345044Z"
+    dependencies:
+    - condition: qdrant.networkMode.deploySubchart
+      name: qdrant
+      repository: https://qdrant.github.io/qdrant-helm
+      version: 1.18.0
+    - condition: ollama.enabled
+      name: ollama
+      repository: https://otwld.github.io/ollama-helm
+      version: 1.56.0
+    description: A Helm chart for deploying Nextcloud MCP Server - enables AI assistants
+      to interact with Nextcloud
+    digest: 28028700dcd04f96555b1dc4582a602f1efad9905680506ecefec18849ef3239
+    home: https://github.com/cbcoutinho/nextcloud-mcp-server
+    icon: https://raw.githubusercontent.com/nextcloud/server/master/core/img/logo/logo.svg
+    keywords:
+    - nextcloud
+    - mcp
+    - model-context-protocol
+    - llm
+    - ai
+    - claude
+    - webdav
+    - caldav
+    - carddav
+    - helm
+    maintainers:
+    - email: chris@coutinho.io
+      name: Chris Coutinho
+    name: nextcloud-mcp-server
+    sources:
+    - https://github.com/cbcoutinho/nextcloud-mcp-server
+    type: application
+    urls:
+    - https://github.com/cbcoutinho/helm-charts/releases/download/nextcloud-mcp-server-0.65.2/nextcloud-mcp-server-0.65.2.tgz
+    version: 0.65.2
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: fixed
           description: "skip data-storage PVC when database backend is configured"
       grafana_dashboard: "true"
       grafana_dashboard_folder: Nextcloud MCP
@@ -1157,4 +1203,4 @@ entries:
     urls:
     - https://github.com/cbcoutinho/helm-charts/releases/download/nextcloud-mcp-server-0.59.1/nextcloud-mcp-server-0.59.1.tgz
     version: 0.59.1
-generated: "2026-05-17T14:32:43.794476641Z"
+generated: "2026-05-17T16:57:02.489495267Z"
