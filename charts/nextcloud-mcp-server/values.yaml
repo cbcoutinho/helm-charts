@@ -194,7 +194,10 @@ auth:
     clientIdKey: "client_id"
     clientSecretKey: "client_secret"
     # Persistent storage for Login Flow v2 / OAuth client registration data
-    # Mounted at /app/.oauth and required when auth.mode is "login-flow"
+    # mounted at /app/.oauth. Required for SQLite-backed deployments;
+    # safe to set `enabled: false` when `database.url` /
+    # `database.existingSecret` is configured (the MCP server then
+    # writes OAuth client registrations to the database, ADR-026).
     persistence:
       enabled: true
       # Storage class (leave empty for default)
@@ -211,8 +214,11 @@ auth:
 #
 # Tip: when `database.url` or `database.existingSecret` is set the MCP
 # server points at a centralized DB and no longer needs a PVC for token
-# storage. You can still leave dataStorage enabled if Qdrant persistent
-# mode (or another consumer) needs /app/data.
+# storage. The chart auto-suppresses the data-storage PVC in that case
+# even when `auth.mode` is `login-flow` / `multi-user-basic` (which
+# would otherwise force it on). Explicitly set `dataStorage.enabled:
+# true` to override — useful if Qdrant persistent mode or another
+# consumer still needs /app/data.
 dataStorage:
   # Enable persistent storage for /app/data
   # Set to true when using:
@@ -221,7 +227,8 @@ dataStorage:
   # - Qdrant persistent mode (stores vector database)
   # - Any feature requiring persistent app data
   # Set to false for basic auth without persistence (uses emptyDir),
-  # or when delegating token storage to `database` below.
+  # or when delegating token storage to `database` below — the chart
+  # also auto-skips this PVC when `database.*` is configured.
   enabled: false
   # Storage class (leave empty for default)
   storageClass: ""
