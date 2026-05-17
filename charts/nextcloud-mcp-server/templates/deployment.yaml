@@ -70,7 +70,13 @@ spec:
             - name: NEXTCLOUD_HOST
               value: {{ .Values.nextcloud.host | quote }}
             {{- if eq .Values.auth.mode "basic" }}
-            # Basic auth mode (single-user)
+            # Basic auth mode (single-user). MCP_DEPLOYMENT_MODE is the
+            # single source of truth for the server's auth flow (ADR-022);
+            # being explicit here matches the loud-fail behaviour in
+            # nextcloud_mcp_server.config.__post_init__ that rejects the
+            # legacy ENABLE_* env vars.
+            - name: MCP_DEPLOYMENT_MODE
+              value: "single_user_basic"
             - name: NEXTCLOUD_USERNAME
               valueFrom:
                 secretKeyRef:
@@ -82,9 +88,11 @@ spec:
                   name: {{ include "nextcloud-mcp-server.basicAuthSecretName" . }}
                   key: {{ .Values.auth.basic.passwordKey }}
             {{- else if eq .Values.auth.mode "multi-user-basic" }}
-            # Multi-user BasicAuth mode (pass-through)
-            - name: ENABLE_MULTI_USER_BASIC_AUTH
-              value: "true"
+            # Multi-user BasicAuth mode (pass-through). Replaces the
+            # legacy ENABLE_MULTI_USER_BASIC_AUTH env var that the server
+            # now loud-fails on (ADR-022 follow-up).
+            - name: MCP_DEPLOYMENT_MODE
+              value: "multi_user_basic"
             - name: NEXTCLOUD_MCP_SERVER_URL
               value: {{ include "nextcloud-mcp-server.mcpServerUrl" . | quote }}
             - name: NEXTCLOUD_PUBLIC_ISSUER_URL
@@ -137,9 +145,11 @@ spec:
                   key: {{ .Values.auth.oauth.clientSecretKey }}
             {{- end }}
             {{- else if eq .Values.auth.mode "login-flow" }}
-            # Login Flow v2 mode (ADR-022)
-            - name: ENABLE_LOGIN_FLOW
-              value: "true"
+            # Login Flow v2 mode (ADR-022). Replaces the legacy
+            # ENABLE_LOGIN_FLOW env var that the server now loud-fails
+            # on if set to a truthy value.
+            - name: MCP_DEPLOYMENT_MODE
+              value: "login_flow"
             - name: NEXTCLOUD_MCP_SERVER_URL
               value: {{ include "nextcloud-mcp-server.mcpServerUrl" . | quote }}
             - name: NEXTCLOUD_PUBLIC_ISSUER_URL
