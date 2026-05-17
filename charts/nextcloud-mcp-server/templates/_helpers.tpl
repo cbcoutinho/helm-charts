@@ -179,14 +179,25 @@ Create the name of the secret to use for Qdrant sidecar API key
 
 {{/*
 Determine if data storage PVC should be enabled (backward compatible)
-Checks new dataStorage.enabled OR legacy persistence configs
+Checks new dataStorage.enabled OR legacy persistence configs.
+
+ADR-026 follow-up: when the operator wires `database.url` /
+`database.existingSecret`, the MCP server stops writing tokens to
+the local tokens.db and the data-storage PVC is dead weight. Skip
+the auth-mode-driven auto-enable in that case (the explicit
+`dataStorage.enabled: true` path still wins, in case someone is
+running the database backend AND wants on-disk space for, say,
+attachment caching). qdrant.mode sidecar/persistent still pin
+data-storage on regardless — that data lives outside the
+database backend.
 */}}
 {{- define "nextcloud-mcp-server.dataStorageEnabled" -}}
+{{- $dbConfigured := or .Values.database.url .Values.database.existingSecret -}}
 {{- if .Values.dataStorage.enabled -}}
 true
-{{- else if and (eq .Values.auth.mode "multi-user-basic") .Values.auth.multiUserBasic.enableOfflineAccess .Values.auth.multiUserBasic.persistence.enabled -}}
+{{- else if and (eq .Values.auth.mode "multi-user-basic") .Values.auth.multiUserBasic.enableOfflineAccess .Values.auth.multiUserBasic.persistence.enabled (not $dbConfigured) -}}
 true
-{{- else if eq .Values.auth.mode "login-flow" -}}
+{{- else if and (eq .Values.auth.mode "login-flow") (not $dbConfigured) -}}
 true
 {{- else if and (eq .Values.qdrant.mode "persistent") .Values.qdrant.localPersistence.enabled -}}
 true
