@@ -4,6 +4,50 @@ entries:
   - annotations:
       artifacthub.io/changes: |
         - kind: fixed
+          description: "bump appVersion 0.87.1 → 0.87.2"
+      grafana_dashboard: "true"
+      grafana_dashboard_folder: Nextcloud MCP
+    apiVersion: v2
+    appVersion: 0.87.2
+    created: "2026-05-17T17:38:33.560061069Z"
+    dependencies:
+    - condition: qdrant.networkMode.deploySubchart
+      name: qdrant
+      repository: https://qdrant.github.io/qdrant-helm
+      version: 1.18.0
+    - condition: ollama.enabled
+      name: ollama
+      repository: https://otwld.github.io/ollama-helm
+      version: 1.56.0
+    description: A Helm chart for deploying Nextcloud MCP Server - enables AI assistants
+      to interact with Nextcloud
+    digest: c502fbedfe0737c78e14f0fef9a3c055d633c4b3f00f0e35f512a1af3b3da673
+    home: https://github.com/cbcoutinho/nextcloud-mcp-server
+    icon: https://raw.githubusercontent.com/nextcloud/server/master/core/img/logo/logo.svg
+    keywords:
+    - nextcloud
+    - mcp
+    - model-context-protocol
+    - llm
+    - ai
+    - claude
+    - webdav
+    - caldav
+    - carddav
+    - helm
+    maintainers:
+    - email: chris@coutinho.io
+      name: Chris Coutinho
+    name: nextcloud-mcp-server
+    sources:
+    - https://github.com/cbcoutinho/nextcloud-mcp-server
+    type: application
+    urls:
+    - https://github.com/cbcoutinho/helm-charts/releases/download/nextcloud-mcp-server-0.65.3/nextcloud-mcp-server-0.65.3.tgz
+    version: 0.65.3
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: fixed
           description: "bump appVersion 0.87.0 → 0.87.1"
         - kind: changed
           description: "update dependency python to 3.14"
@@ -1203,4 +1247,4 @@ entries:
     urls:
     - https://github.com/cbcoutinho/helm-charts/releases/download/nextcloud-mcp-server-0.59.1/nextcloud-mcp-server-0.59.1.tgz
     version: 0.59.1
-generated: "2026-05-17T16:57:02.489495267Z"
+generated: "2026-05-17T17:38:33.560195503Z"
