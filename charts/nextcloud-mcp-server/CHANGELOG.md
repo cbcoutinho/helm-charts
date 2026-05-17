@@ -14,6 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable resource limits
 - Grafana dashboard annotations
 
+## nextcloud-mcp-server-0.65.0 (2026-05-17)
+
+### Feat
+
+- **nextcloud-mcp-server**: add TLS knobs + pool sizing to database stanza
+- **nextcloud-mcp-server**: add database.url for centralized token storage (ADR-026)
+
 ## nextcloud-mcp-server-0.64.0 (2026-05-17)
 
 ### Feat
