@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable resource limits
 - Grafana dashboard annotations
 
+## nextcloud-mcp-server-0.65.1 (2026-05-17)
+
+### Fix
+
+- **nextcloud-mcp-server**: skip data-storage PVC when database backend is configured
+
 ## nextcloud-mcp-server-0.65.0 (2026-05-17)
 
 ### Feat
