@@ -69,6 +69,43 @@ spec:
             # Nextcloud connection
             - name: NEXTCLOUD_HOST
               value: {{ .Values.nextcloud.host | quote }}
+            {{- if or .Values.database.url .Values.database.existingSecret }}
+            # Centralized database backend (ADR-026). Wins over the
+            # TOKEN_STORAGE_DB local-SQLite path that each auth mode sets
+            # below; the MCP server reads DATABASE_URL first and falls back
+            # to TOKEN_STORAGE_DB only when DATABASE_URL is unset.
+            - name: DATABASE_URL
+              {{- if .Values.database.existingSecret }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.existingSecret | quote }}
+                  key: {{ .Values.database.existingSecretKey | quote }}
+              {{- else }}
+              value: {{ .Values.database.url | quote }}
+              {{- end }}
+            {{- end }}
+            {{- if .Values.database.verifySsl }}
+            - name: DATABASE_VERIFY_SSL
+              value: {{ .Values.database.verifySsl | quote }}
+            {{- end }}
+            {{- if or .Values.database.caBundle .Values.database.caBundleSecret.name }}
+            - name: DATABASE_CA_BUNDLE
+              # When caBundleSecret is set, point at the mounted Secret
+              # path; otherwise honor the operator-supplied path directly.
+              value: {{ if .Values.database.caBundleSecret.name -}}
+                     {{ .Values.database.caBundleSecret.mountPath | quote }}
+                     {{- else -}}
+                     {{ .Values.database.caBundle | quote }}
+                     {{- end }}
+            {{- end }}
+            {{- if .Values.database.poolSize }}
+            - name: DATABASE_POOL_SIZE
+              value: {{ .Values.database.poolSize | quote }}
+            {{- end }}
+            {{- if (or (eq (toString .Values.database.maxOverflow) "0") .Values.database.maxOverflow) }}
+            - name: DATABASE_MAX_OVERFLOW
+              value: {{ .Values.database.maxOverflow | quote }}
+            {{- end }}
             {{- if eq .Values.auth.mode "basic" }}
             # Basic auth mode (single-user). MCP_DEPLOYMENT_MODE is the
             # single source of truth for the server's auth flow (ADR-022);
@@ -368,6 +405,15 @@ spec:
             {{- end }}
             - name: data-storage
               mountPath: /app/data
+            {{- if .Values.database.caBundleSecret.name }}
+            # Mount the Secret-provided CA bundle at the path
+            # DATABASE_CA_BUNDLE points at, with subPath so only the
+            # bundle file lands in the mount.
+            - name: database-ca-bundle
+              mountPath: {{ .Values.database.caBundleSecret.mountPath | quote }}
+              subPath: {{ .Values.database.caBundleSecret.key | quote }}
+              readOnly: true
+            {{- end }}
             {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
@@ -425,6 +471,14 @@ spec:
         {{- if eq .Values.qdrant.mode "sidecar" }}
         - name: qdrant-snapshots
           emptyDir: {}
+        {{- end }}
+        {{- if .Values.database.caBundleSecret.name }}
+        - name: database-ca-bundle
+          secret:
+            secretName: {{ .Values.database.caBundleSecret.name | quote }}
+            items:
+              - key: {{ .Values.database.caBundleSecret.key | quote }}
+                path: {{ .Values.database.caBundleSecret.key | quote }}
         {{- end }}
         {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}

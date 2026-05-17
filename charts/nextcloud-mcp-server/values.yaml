@@ -208,6 +208,11 @@ auth:
 # Persistent volume for /app/data directory
 # Used for: token databases, qdrant persistent storage, and any app data
 # When disabled, uses emptyDir (non-persistent, but still writable)
+#
+# Tip: when `database.url` or `database.existingSecret` is set the MCP
+# server points at a centralized DB and no longer needs a PVC for token
+# storage. You can still leave dataStorage enabled if Qdrant persistent
+# mode (or another consumer) needs /app/data.
 dataStorage:
   # Enable persistent storage for /app/data
   # Set to true when using:
@@ -215,7 +220,8 @@ dataStorage:
   # - Login flow mode (stores app passwords in tokens.db)
   # - Qdrant persistent mode (stores vector database)
   # - Any feature requiring persistent app data
-  # Set to false for basic auth without persistence (uses emptyDir)
+  # Set to false for basic auth without persistence (uses emptyDir),
+  # or when delegating token storage to `database` below.
   enabled: false
   # Storage class (leave empty for default)
   storageClass: ""
@@ -225,6 +231,54 @@ dataStorage:
   size: 1Gi
   # Use existing PVC
   existingClaim: ""
+
+# Centralized database backend (ADR-026)
+# When set, the MCP server stores all tokens / sessions / app passwords in
+# a shared SQL database instead of a local SQLite file. Required for HA
+# deployments with replicaCount > 1 so pods can be stateless.
+#
+# Bring-your-own DB — this chart does NOT provision Postgres. Use CNPG,
+# RDS, your existing Postgres sub-chart, etc.
+#
+# Encryption is unchanged: TOKEN_ENCRYPTION_KEY is still required and
+# applied in Python; the database only sees ciphertext.
+database:
+  # Inline URL (DO NOT USE in production — credentials end up in plaintext).
+  # Useful for local dev or quick experiments. Prefer existingSecret.
+  url: ""
+  # Reference an existing Secret holding the SQLAlchemy URL. Recommended.
+  # The Secret must contain the key named below with a value like:
+  #   postgresql+asyncpg://user:password@host:5432/dbname
+  existingSecret: ""
+  existingSecretKey: "DATABASE_URL"
+
+  # TLS verification for the Postgres backend (ADR-026).
+  # Unset (default) → asyncpg's `prefer` mode (TLS if offered, no
+  # verification — works for cluster-internal Postgres without TLS).
+  # "true" → full cert verification. "false" → silence cert errors
+  # (homelab / self-signed). Prefer caBundle over "false" for production.
+  verifySsl: ""
+
+  # Path *inside the container* to a PEM file containing a private CA.
+  # Implies verifySsl=true. Either set this directly (when you're
+  # already mounting certs from elsewhere) or use caBundleSecret below
+  # to have the chart mount a Secret for you.
+  caBundle: ""
+
+  # Mount a Secret as the CA bundle file and auto-set caBundle to the
+  # in-container path. Operator-friendly path: store the CA in a Secret
+  # alongside the DATABASE_URL Secret and reference both from values.
+  caBundleSecret:
+    name: ""
+    key: ""
+    mountPath: "/etc/ssl/database-ca.crt"
+
+  # SQLAlchemy connection pool sizing (ADR-026). Max per-pod
+  # connections = poolSize + maxOverflow. With many replicas this can
+  # blow past managed-Postgres `max_connections=100`; tune down for
+  # large fleets. Empty = server default (10 / 20).
+  poolSize: ""
+  maxOverflow: ""
 
 # MCP server configuration
 mcp:
