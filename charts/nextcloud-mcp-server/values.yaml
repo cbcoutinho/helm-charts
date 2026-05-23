@@ -580,7 +580,7 @@ qdrant:
     image:
       repository: docker.io/qdrant/qdrant
       # renovate: datasource=docker depName=docker.io/qdrant/qdrant
-      tag: "v1.18.0"
+      tag: "v1.18.1"
       pullPolicy: IfNotPresent
     # Resources for the qdrant sidecar
     resources:
