@@ -239,6 +239,20 @@ Enable semantic search capabilities with BM25 hybrid search by deploying a vecto
 | `semanticSearch.processorWorkers` | Number of concurrent processor workers | `3` |
 | `semanticSearch.queueMaxSize` | Maximum queue size for pending documents | `10000` |
 
+**Ingest Queue Configuration (Deck #183):**
+
+procrastinate is **opt-in**. By default document processing runs in-process via anyio task groups (`INGEST_QUEUE=memory`) — even with a PostgreSQL database backend. Set `ingest.splitWorker=true` to split ingest into a procrastinate Postgres queue (`INGEST_QUEUE=postgres`, `MCP_ROLE=api`) drained by a dedicated worker Deployment (`MCP_ROLE=worker`). Requires a PostgreSQL `database.url`/`database.existingSecret`.
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `ingest.splitWorker` | Split ingest into a procrastinate queue + worker Deployment (opt-in; requires PostgreSQL). When `false`, processing stays in-process | `false` |
+| `ingest.worker.replicaCount` | Worker replicas (a floor; a KEDA ScaledObject may manage scale-to-zero) | `1` |
+| `ingest.worker.concurrency` | Max concurrent jobs per worker (empty → `VECTOR_SYNC_PROCESSOR_WORKERS`) | `""` |
+| `ingest.worker.resources` | Worker resource requests/limits | `{}` |
+| `ingest.worker.nodeSelector` | Worker node selector | `{}` |
+| `ingest.worker.tolerations` | Worker tolerations | `[]` |
+| `ingest.worker.affinity` | Worker affinity | `{}` |
+
 **Document Chunking Configuration:**
 
 | Parameter | Description | Default |

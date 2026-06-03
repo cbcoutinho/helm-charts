@@ -1,0 +1,120 @@
+{{- if .Values.ingest.splitWorker }}
+{{- /*
+Ingest worker Deployment (Deck #183). Only rendered when ingest.splitWorker is
+true: drains the per-tenant procrastinate Postgres queue (fetch → chunk → embed
+→ upsert Qdrant). Shares the API container env verbatim via the
+`nextcloud-mcp-server.containerEnv` helper; only the command, INGEST_QUEUE and
+MCP_ROLE differ. Replicas are a floor — apply a KEDA ScaledObject (platform
+layer) targeting this Deployment by name for scale-to-zero on queue depth.
+*/}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "nextcloud-mcp-server.fullname" . }}-worker
+  labels:
+    {{- include "nextcloud-mcp-server.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ingest-worker
+spec:
+  replicas: {{ .Values.ingest.worker.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "nextcloud-mcp-server.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: ingest-worker
+  template:
+    metadata:
+      annotations:
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "nextcloud-mcp-server.labels" . | nindent 8 }}
+        app.kubernetes.io/component: ingest-worker
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "nextcloud-mcp-server.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- with .Values.initContainers }}
+      initContainers:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}-worker
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ include "nextcloud-mcp-server.imageTag" . }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          # Override the image's default `run` entrypoint to drain the queue.
+          command:
+            - "/app/.venv/bin/nextcloud-mcp-server"
+            - "worker"
+          {{- if .Values.ingest.worker.concurrency }}
+          args:
+            - "--concurrency"
+            - {{ .Values.ingest.worker.concurrency | quote }}
+          {{- end }}
+          env:
+{{- include "nextcloud-mcp-server.containerEnv" . }}
+            # Ingest worker role (Deck #183): drains the procrastinate queue.
+            - name: INGEST_QUEUE
+              value: "postgres"
+            - name: MCP_ROLE
+              value: "worker"
+          {{- with .Values.extraEnvFrom }}
+          envFrom:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.ingest.worker.resources | nindent 12 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: data-storage
+              mountPath: /app/data
+            {{- if .Values.database.caBundleSecret.name }}
+            - name: database-ca-bundle
+              mountPath: {{ .Values.database.caBundleSecret.mountPath | quote }}
+              subPath: {{ .Values.database.caBundleSecret.key | quote }}
+              readOnly: true
+            {{- end }}
+            {{- with .Values.volumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        # The worker uses DATABASE_URL for both the queue and stored app
+        # passwords; /app/data is just a writable mount for the read-only rootfs.
+        - name: data-storage
+          emptyDir: {}
+        {{- if .Values.database.caBundleSecret.name }}
+        - name: database-ca-bundle
+          secret:
+            secretName: {{ .Values.database.caBundleSecret.name | quote }}
+            items:
+              - key: {{ .Values.database.caBundleSecret.key | quote }}
+                path: {{ .Values.database.caBundleSecret.key | quote }}
+        {{- end }}
+        {{- with .Values.volumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.ingest.worker.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.ingest.worker.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.ingest.worker.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}
