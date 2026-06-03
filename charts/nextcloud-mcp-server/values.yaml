@@ -249,21 +249,29 @@ dataStorage:
 #
 # Encryption is unchanged: TOKEN_ENCRYPTION_KEY is still required and
 # applied in Python; the database only sees ciphertext.
+#
+# Driver: use psycopg3 (`postgresql+psycopg://`). Deck #183 added a
+# procrastinate-based ingest queue that requires psycopg3, so the deployment
+# standardizes on a single Postgres driver — set DATABASE_URL to a
+# `postgresql+psycopg://` URL (a bare `postgresql://` or legacy
+# `postgresql+asyncpg://` still works for the app's own engine during the
+# transition, but psycopg3 is the target).
 database:
   # Inline URL (DO NOT USE in production — credentials end up in plaintext).
   # Useful for local dev or quick experiments. Prefer existingSecret.
   url: ""
   # Reference an existing Secret holding the SQLAlchemy URL. Recommended.
   # The Secret must contain the key named below with a value like:
-  #   postgresql+asyncpg://user:password@host:5432/dbname
+  #   postgresql+psycopg://user:password@host:5432/dbname
   existingSecret: ""
   existingSecretKey: "DATABASE_URL"
 
   # TLS verification for the Postgres backend (ADR-026).
-  # Unset (default) → asyncpg's `prefer` mode (TLS if offered, no
+  # Unset (default) → libpq's `prefer` mode (TLS if offered, no
   # verification — works for cluster-internal Postgres without TLS).
-  # "true" → full cert verification. "false" → silence cert errors
-  # (homelab / self-signed). Prefer caBundle over "false" for production.
+  # "true" → full cert verification (sslmode=verify-full). "false" →
+  # encrypt without verifying (sslmode=require; homelab / self-signed).
+  # Prefer caBundle over "false" for production.
   verifySsl: ""
 
   # Path *inside the container* to a PEM file containing a private CA.
