@@ -534,6 +534,42 @@ semanticSearch:
   # Maximum queue size for documents pending indexing
   queueMaxSize: 10000
 
+# Ingest queue backend (Deck #183).
+#
+# Controls HOW changed documents are processed into the vector store, NOT
+# whether (that's semanticSearch.enabled). procrastinate is strictly opt-in:
+#
+#   splitWorker: false (default)
+#     The API pod processes documents IN-PROCESS via anyio task groups
+#     (INGEST_QUEUE=memory). No procrastinate, no separate worker — even when a
+#     PostgreSQL database backend is configured. This is the safe default; a
+#     Postgres DATABASE_URL alone never spins up a background queue.
+#
+#   splitWorker: true
+#     Ingest is split across a service boundary: the API pod (MCP_ROLE=api)
+#     defers one procrastinate job per changed document into Postgres, and a
+#     dedicated worker Deployment (MCP_ROLE=worker) drains the queue
+#     (fetch → chunk → embed → upsert Qdrant). Requires a PostgreSQL
+#     database.url / database.existingSecret (procrastinate is Postgres-only;
+#     the server fails loudly otherwise).
+ingest:
+  # Split ingest into a procrastinate Postgres queue + worker Deployment.
+  # Leave false to keep document processing in-process (anyio task groups).
+  splitWorker: false
+  # Settings for the worker Deployment (only rendered when splitWorker=true).
+  worker:
+    # Static replica count. For scale-to-zero on queue depth, apply a KEDA
+    # ScaledObject targeting the "<release>-worker" Deployment (handled by the
+    # platform layer) and KEDA manages replicas instead.
+    replicaCount: 1
+    # Max concurrent jobs per worker (CLI -c). Empty → the server default
+    # (VECTOR_SYNC_PROCESSOR_WORKERS).
+    concurrency: ""
+    resources: {}
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+
 # Document Chunking Configuration
 # Controls how documents are split into chunks before embedding
 # Only relevant when semanticSearch.enabled is true
