@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable resource limits
 - Grafana dashboard annotations
 
+## nextcloud-mcp-server-0.69.0 (2026-06-04)
+
+### Feat
+
+- **nextcloud-mcp-server**: opt-in procrastinate ingest worker split
+
 ## nextcloud-mcp-server-0.68.0 (2026-06-03)
 
 ### Feat

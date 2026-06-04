@@ -2,7 +2,7 @@ apiVersion: v2
 name: nextcloud-mcp-server
 description: A Helm chart for deploying Nextcloud MCP Server - enables AI assistants to interact with Nextcloud
 type: application
-version: 0.68.0
+version: 0.69.0
 appVersion: "0.98.1"
 keywords:
   - nextcloud
@@ -27,10 +27,8 @@ annotations:
   grafana_dashboard: "true"
   grafana_dashboard_folder: "Nextcloud MCP"
   artifacthub.io/changes: |
-    - kind: changed
-      description: "update actions/checkout action to v6.0.3"
-    - kind: changed
-      description: "recommend psycopg3 DATABASE_URL driver"
+    - kind: added
+      description: "opt-in procrastinate ingest worker split"
 dependencies:
   - name: qdrant
     version: "1.18.1"
