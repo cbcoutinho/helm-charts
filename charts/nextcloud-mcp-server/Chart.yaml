@@ -31,7 +31,7 @@ annotations:
       description: "opt-in procrastinate ingest worker split"
 dependencies:
   - name: qdrant
-    version: "1.18.1"
+    version: "1.18.2"
     repository: https://qdrant.github.io/qdrant-helm
     condition: qdrant.networkMode.deploySubchart
   - name: ollama

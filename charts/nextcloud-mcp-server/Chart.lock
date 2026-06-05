@@ -1,9 +1,9 @@
 dependencies:
 - name: qdrant
   repository: https://qdrant.github.io/qdrant-helm
-  version: 1.18.1
+  version: 1.18.2
 - name: ollama
   repository: https://otwld.github.io/ollama-helm
   version: 1.57.0
-digest: sha256:17df60dbdda7fe90b86acd90966947e723a26ae8dfb874ca1db685709186355f
-generated: "2026-06-02T04:06:58.613331598Z"
+digest: sha256:82b3df66871269af36c9dbb252352a1258108b0a988447e556925df5224c8abc
+generated: "2026-06-05T00:11:44.786380118Z"
