@@ -648,6 +648,23 @@ documentPipeline:
     # Provider-namespaced OCR model id. The gateway routes on the "<provider>/"
     # prefix; the direct Mistral backend strips it.
     model: "mistral/mistral-ocr-latest"
+    # Escalation tuning — when does a PDF page get sent to OCR instead of the
+    # fast text tier. A page is OCR-worthy if it is near-empty
+    # (< minPageChars extracted chars) OR its text quality is junk
+    # (< minTextQuality) OR (when detectScanned) it is mostly a raster image;
+    # the whole document escalates once the OCR-worthy page fraction reaches
+    # pageFraction. Defaults mirror the MCP server's own defaults
+    # (nextcloud_mcp_server/config.py).
+    # Minimum extracted-text quality score [0,1] below which a page is junk.
+    minTextQuality: 0.5
+    # Fraction of sampled pages [0,1] flagged OCR-worthy before the whole doc
+    # escalates to OCR.
+    pageFraction: 0.5
+    # A page with fewer than this many extracted chars counts as near-empty.
+    minPageChars: 16
+    # Run raster-image analysis to detect scanned pages (only active when OCR
+    # is enabled). Off makes escalation rely on char-count + text-quality only.
+    detectScanned: true
 
 # Qdrant Vector Database Configuration
 # Four deployment modes available:

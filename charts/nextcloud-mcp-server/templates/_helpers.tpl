@@ -539,6 +539,15 @@ both pods stay in lock-step (Deck #183).
               value: {{ .Values.documentPipeline.ocr.provider | quote }}
             - name: DOCUMENT_OCR_MODEL
               value: {{ .Values.documentPipeline.ocr.model | quote }}
+            # OCR escalation tuning (see documentPipeline.ocr.* in values.yaml).
+            - name: DOCUMENT_OCR_MIN_TEXT_QUALITY
+              value: {{ .Values.documentPipeline.ocr.minTextQuality | quote }}
+            - name: DOCUMENT_OCR_PAGE_FRACTION
+              value: {{ .Values.documentPipeline.ocr.pageFraction | quote }}
+            - name: DOCUMENT_OCR_MIN_PAGE_CHARS
+              value: {{ .Values.documentPipeline.ocr.minPageChars | quote }}
+            - name: DOCUMENT_OCR_DETECT_SCANNED
+              value: {{ .Values.documentPipeline.ocr.detectScanned | quote }}
             {{- end }}
             # Qdrant Vector Database
             {{- if eq .Values.qdrant.mode "network" }}
