@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable resource limits
 - Grafana dashboard annotations
 
+## nextcloud-mcp-server-0.74.0 (2026-06-05)
+
+### Feat
+
+- **nextcloud-mcp-server**: expose OCR escalation tuning knobs
+
 ## nextcloud-mcp-server-0.73.0 (2026-06-05)
 
 ### Feat
