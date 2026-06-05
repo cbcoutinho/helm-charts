@@ -39,6 +39,15 @@ nextcloud:
   # Example: https://cloud.example.com
   publicIssuerUrl: ""
 
+  # Verify TLS certificates when connecting to Nextcloud (NEXTCLOUD_VERIFY_SSL).
+  # Set to false only for self-signed certs in trusted networks.
+  verifySsl: true
+  # In-container path to a PEM CA bundle for a private CA (NEXTCLOUD_CA_BUNDLE).
+  # The chart only sets the env var — mount the file yourself via the top-level
+  # `volumes` / `volumeMounts`.
+  # Example: /etc/ssl/nextcloud-ca.crt
+  caBundle: ""
+
 # Authentication configuration
 # Choose one mode: "basic", "multi-user-basic", "oauth", or "login-flow"
 auth:
@@ -387,6 +396,12 @@ observability:
     endpoint: ""  # e.g., "http://opentelemetry-collector:4317"
     serviceName: "nextcloud-mcp-server"
     samplingRate: 1.0
+    # OTEL sampler strategy (OTEL_TRACES_SAMPLER): always_on, always_off,
+    # traceidratio, parentbased_always_on, parentbased_traceidratio, etc.
+    # When using a *ratio sampler, samplingRate above is passed as its arg.
+    sampler: "always_on"
+    # Verify TLS to the OTLP endpoint (OTEL_EXPORTER_VERIFY_SSL).
+    verifySsl: false
 
   # Logging configuration
   logging:
@@ -533,6 +548,9 @@ semanticSearch:
   processorWorkers: 3
   # Maximum queue size for documents pending indexing
   queueMaxSize: 10000
+  # Comma-separated Nextcloud tag names to exclude from indexing (EXCLUDED_TAGS).
+  # Documents carrying any of these tags are skipped by the vector sync.
+  excludedTags: ""
 
 # Ingest queue backend (Deck #183).
 #
@@ -583,6 +601,53 @@ documentChunking:
   # Recommended: 10-20% of chunkSize for context preservation across boundaries
   # Must be less than chunkSize
   chunkOverlap: 50
+
+# Tiered PDF extraction + OCR pipeline
+# Runs on the semantic-search / vector-ingestion path (applies whenever
+# semanticSearch.enabled is true and a PDF is indexed). This is SEPARATE from
+# the legacy `documentProcessing` block above (the unstructured/tesseract/custom
+# processors gated by ENABLE_DOCUMENT_PROCESSING) — enabling OCR here does NOT
+# require documentProcessing.enabled.
+documentPipeline:
+  # Fast-tier PDF engine: "pypdfium2" (default, permissive license) or
+  # "pymupdf" (deprecated AGPL rollback escape hatch).
+  tier1Engine: "pypdfium2"
+  # Tier-0 classifier. Records classification metrics (recommended_tier,
+  # text-quality) on the tiered path. Default on.
+  classifyEnabled: true
+  # PDF parse tuning (generic).
+  # Wall-clock timeout for a single PDF parse, in seconds.
+  parseTimeoutSeconds: 120
+  # RLIMIT_AS memory cap (MB) applied in the parse subprocess. Keep below the
+  # pod memory limit.
+  parseMemLimitMb: 1536
+  # Max vector graphics per PDF before the parser bails (pymupdf path).
+  pdfGraphicsLimit: 1000
+  # Tier-3 OCR for scanned / no-text-layer PDFs. Off by default; when off the
+  # fast tier is terminal.
+  ocr:
+    # Enable OCR escalation for scanned PDFs.
+    enabled: false
+    # OCR backend: "auto" | "gateway" | "mistral" | "none".
+    #   mistral - Call the Mistral OCR API directly from the pod. Enable the
+    #             top-level `mistral` block below so MISTRAL_API_KEY (and
+    #             optionally MISTRAL_BASE_URL) are provided. Works for any
+    #             self-hoster.
+    #   gateway - Route OCR through an Astrolabe Cloud–style model gateway
+    #             (no provider keys in the pod). The gateway URL + M2M creds
+    #             (EMBEDDING_GATEWAY_URL / _TOKEN_URL / _CLIENT_ID /
+    #             _CLIENT_SECRET / _SCOPE) are intentionally NOT part of this
+    #             public chart — supply them from your private overlay via
+    #             `extraEnv` (see the extraEnv example below).
+    #   auto    - Prefer gateway if EMBEDDING_GATEWAY_URL is set, else Mistral
+    #             if MISTRAL_API_KEY is set, else OCR is disabled.
+    #   none    - OCR disabled.
+    # Note: OCR backend selection is independent of the embedding provider —
+    # you can embed via Ollama/OpenAI and OCR via gateway/Mistral.
+    provider: "auto"
+    # Provider-namespaced OCR model id. The gateway routes on the "<provider>/"
+    # prefix; the direct Mistral backend strips it.
+    model: "mistral/mistral-ocr-latest"
 
 # Qdrant Vector Database Configuration
 # Four deployment modes available:

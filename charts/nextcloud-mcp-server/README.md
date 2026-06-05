@@ -100,6 +100,8 @@ ingress:
 | `nextcloud.host` | URL of your Nextcloud instance (required) | `""` |
 | `nextcloud.mcpServerUrl` | MCP server URL for OAuth callbacks (OAuth only, optional) | Smart default* |
 | `nextcloud.publicIssuerUrl` | Public URL for browser-accessible OAuth authorization endpoint (OAuth only, optional) | Smart default** |
+| `nextcloud.verifySsl` | Verify TLS certificates when connecting to Nextcloud (`NEXTCLOUD_VERIFY_SSL`) | `true` |
+| `nextcloud.caBundle` | In-container path to a PEM CA bundle for a private CA (`NEXTCLOUD_CA_BUNDLE`); mount the file via `volumes`/`volumeMounts` | `""` |
 
 **Smart Defaults:**
 - `*mcpServerUrl`: If not set, automatically uses ingress host (if enabled) or `http://localhost:8000` (for port-forward setups)
@@ -238,6 +240,7 @@ Enable semantic search capabilities with BM25 hybrid search by deploying a vecto
 | `semanticSearch.scanInterval` | Scan interval in seconds | `3600` |
 | `semanticSearch.processorWorkers` | Number of concurrent processor workers | `3` |
 | `semanticSearch.queueMaxSize` | Maximum queue size for pending documents | `10000` |
+| `semanticSearch.excludedTags` | Comma-separated Nextcloud tag names to exclude from indexing (`EXCLUDED_TAGS`) | `""` |
 
 **Ingest Queue Configuration (Deck #183):**
 
@@ -325,6 +328,81 @@ Use OpenAI or any OpenAI-compatible API instead of Ollama.
 | `openai.secretKey` | Key in secret containing API key | `api-key` |
 | `openai.baseUrl` | Custom API endpoint (optional) | `""` |
 
+**Mistral Embedding Provider (Alternative):**
+
+A first-class Mistral provider, distinct from the OpenAI-compatible path. `MISTRAL_API_KEY` alone enables it. Enabling this block also supplies the credentials used by the **Mistral-direct OCR backend** (see PDF Pipeline & OCR below).
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `mistral.enabled` | Enable Mistral embedding provider (and provide `MISTRAL_API_KEY` for Mistral-direct OCR) | `false` |
+| `mistral.apiKey` | Mistral API key (ignored if `existingSecret` set) | `""` |
+| `mistral.existingSecret` | Use existing secret for API key | `""` |
+| `mistral.secretKey` | Key in secret containing API key | `api-key` |
+| `mistral.embeddingModel` | Embedding model (1024-dim default) | `mistral-embed` |
+| `mistral.baseUrl` | Custom API endpoint, e.g. `https://api.mistral.ai/v1` (`MISTRAL_BASE_URL`) | `""` |
+
+#### PDF Pipeline & OCR (Optional)
+
+A tiered PDF extraction pipeline runs on the **semantic-search / vector-ingestion path** (whenever `semanticSearch.enabled` is `true` and a PDF is indexed). It is **separate from** the legacy `documentProcessing` block above — enabling OCR here does **not** require `documentProcessing.enabled`.
+
+PDFs are extracted with a fast tier (`pypdfium2`); scanned / no-text-layer PDFs can optionally be escalated to **tier-3 OCR**. OCR has two interchangeable backends, selected by `documentPipeline.ocr.provider`:
+
+- **`mistral`** — calls the Mistral OCR API directly from the pod. Enable the `mistral` block so `MISTRAL_API_KEY` is present. Works for any self-hoster.
+- **`gateway`** — routes OCR through a model gateway (no provider keys in the pod). The gateway URL + M2M credentials (`EMBEDDING_GATEWAY_URL` / `_TOKEN_URL` / `_CLIENT_ID` / `_CLIENT_SECRET` / `_SCOPE`) are **intentionally not part of this chart**; supply them from your own overlay via `extraEnv` (see below).
+- **`auto`** — prefer the gateway if `EMBEDDING_GATEWAY_URL` is set, else Mistral if `MISTRAL_API_KEY` is set, else OCR stays disabled.
+
+OCR backend selection is independent of the embedding provider — you can embed via Ollama/OpenAI and OCR via Mistral/gateway.
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `documentPipeline.tier1Engine` | Fast-tier PDF engine: `pypdfium2` (default) or `pymupdf` (deprecated rollback) | `pypdfium2` |
+| `documentPipeline.classifyEnabled` | Record tier-0 classification metrics | `true` |
+| `documentPipeline.parseTimeoutSeconds` | Per-PDF parse timeout (seconds) | `120` |
+| `documentPipeline.parseMemLimitMb` | RLIMIT_AS memory cap for the parse subprocess (MB) | `1536` |
+| `documentPipeline.pdfGraphicsLimit` | Max vector graphics per PDF before bailing (pymupdf path) | `1000` |
+| `documentPipeline.ocr.enabled` | Enable tier-3 OCR for scanned PDFs | `false` |
+| `documentPipeline.ocr.provider` | OCR backend: `auto`, `gateway`, `mistral`, `none` | `auto` |
+| `documentPipeline.ocr.model` | Provider-namespaced OCR model id | `mistral/mistral-ocr-latest` |
+
+**Enable OCR via Mistral directly:**
+
+```yaml
+semanticSearch:
+  enabled: true
+documentPipeline:
+  ocr:
+    enabled: true
+    provider: mistral
+mistral:
+  enabled: true
+  existingSecret: mistral-api-key   # or set mistral.apiKey
+```
+
+**Enable OCR via a model gateway** (gateway connection details supplied by your own overlay, keeping them out of the public chart values):
+
+```yaml
+semanticSearch:
+  enabled: true
+documentPipeline:
+  ocr:
+    enabled: true
+    provider: gateway
+# Gateway URL + M2M creds injected via extraEnv (not chart-native):
+extraEnv:
+  - name: EMBEDDING_GATEWAY_URL
+    value: "https://<gateway-host>"
+  - name: EMBEDDING_GATEWAY_TOKEN_URL
+    value: "https://<idp>/.../token"
+  - name: EMBEDDING_GATEWAY_SCOPE
+    value: "<gateway>/embed"
+  - name: EMBEDDING_GATEWAY_CLIENT_ID
+    valueFrom:
+      secretKeyRef: { name: gateway-creds, key: client_id }
+  - name: EMBEDDING_GATEWAY_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef: { name: gateway-creds, key: client_secret }
+```
+
 #### Observability & Monitoring
 
 The chart includes comprehensive observability features including Prometheus metrics, OpenTelemetry tracing, and Grafana dashboards.
@@ -344,7 +422,9 @@ The chart includes comprehensive observability features including Prometheus met
 | `observability.tracing.enabled` | Enable OpenTelemetry tracing | `false` |
 | `observability.tracing.endpoint` | OTLP collector endpoint | `""` |
 | `observability.tracing.serviceName` | Service name in traces | `nextcloud-mcp-server` |
-| `observability.tracing.samplingRate` | Trace sampling rate (0.0-1.0) | `1.0` |
+| `observability.tracing.samplingRate` | Trace sampling rate (0.0-1.0); passed as the sampler arg (`OTEL_TRACES_SAMPLER_ARG`) | `1.0` |
+| `observability.tracing.sampler` | OTEL sampler strategy (`OTEL_TRACES_SAMPLER`): `always_on`, `always_off`, `traceidratio`, `parentbased_*` | `always_on` |
+| `observability.tracing.verifySsl` | Verify TLS to the OTLP endpoint (`OTEL_EXPORTER_VERIFY_SSL`) | `false` |
 
 **Logging Configuration:**
 
