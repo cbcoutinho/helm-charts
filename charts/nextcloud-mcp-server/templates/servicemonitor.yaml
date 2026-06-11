@@ -13,6 +13,10 @@ spec:
   selector:
     matchLabels:
       {{- include "nextcloud-mcp-server.selectorLabels" . | nindent 6 }}
+      # Match only the API Service. The worker Service carries the same
+      # selectorLabels plus component=ingest-worker and has its own
+      # ServiceMonitor, so without this it would be double-scraped (Deck #310).
+      app.kubernetes.io/component: api
   endpoints:
     - port: metrics
       path: {{ .Values.observability.metrics.path }}

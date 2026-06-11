@@ -410,6 +410,9 @@ observability:
     includeTraceContext: true
 
 # Prometheus ServiceMonitor (requires Prometheus Operator)
+# When ingest.splitWorker is true, this same toggle also renders a second
+# ServiceMonitor (+ headless Service) for the ingest-worker pods, reusing the
+# interval/scrapeTimeout/labels below.
 serviceMonitor:
   enabled: false
   interval: 30s

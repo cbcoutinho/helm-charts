@@ -22,6 +22,10 @@ spec:
         {{- end }}
       labels:
         {{- include "nextcloud-mcp-server.labels" . | nindent 8 }}
+        # Distinguish the API workload from the ingest-worker so the Service /
+        # ServiceMonitor scrape only the API pods — the worker has its own
+        # Service + ServiceMonitor (Deck #310).
+        app.kubernetes.io/component: api
         {{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}

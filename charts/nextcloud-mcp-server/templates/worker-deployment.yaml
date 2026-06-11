@@ -60,6 +60,15 @@ spec:
             - "--concurrency"
             - {{ .Values.ingest.worker.concurrency | quote }}
           {{- end }}
+          {{- if .Values.observability.metrics.enabled }}
+          # The worker CLI starts the Prometheus server on METRICS_PORT when
+          # METRICS_ENABLED (nextcloud-mcp-server #890). Expose it as a named
+          # port so the worker Service + ServiceMonitor can scrape it (Deck #310).
+          ports:
+            - name: metrics
+              containerPort: {{ .Values.observability.metrics.port }}
+              protocol: TCP
+          {{- end }}
           env:
 {{- include "nextcloud-mcp-server.containerEnv" . }}
             # Ingest worker role (Deck #183): drains the procrastinate queue.

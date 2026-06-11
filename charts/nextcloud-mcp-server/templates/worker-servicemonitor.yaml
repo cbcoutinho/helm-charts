@@ -1,0 +1,40 @@
+{{- if and .Values.ingest.splitWorker .Values.observability.metrics.enabled .Values.serviceMonitor.enabled }}
+{{- /*
+Scrapes the ingest-worker pods (Deck #310). Mirrors the API ServiceMonitor but
+selects the worker Service (component=ingest-worker). Reuses serviceMonitor.*
+knobs so a single toggle covers both workloads. The namespace relabeling is what
+keys the astrolabe_* document-pipeline metrics to a tenant (Deck #173/#175).
+*/}}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "nextcloud-mcp-server.fullname" . }}-worker
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "nextcloud-mcp-server.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ingest-worker
+    {{- with .Values.serviceMonitor.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "nextcloud-mcp-server.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: ingest-worker
+  endpoints:
+    - port: metrics
+      path: {{ .Values.observability.metrics.path }}
+      interval: {{ .Values.serviceMonitor.interval }}
+      scrapeTimeout: {{ .Values.serviceMonitor.scrapeTimeout }}
+      scheme: http
+      relabelings:
+        # Add namespace label (tenant identity for the astrolabe_* metrics)
+        - sourceLabels: [__meta_kubernetes_namespace]
+          targetLabel: namespace
+        # Add pod label
+        - sourceLabels: [__meta_kubernetes_pod_name]
+          targetLabel: pod
+        # Add service label
+        - sourceLabels: [__meta_kubernetes_service_name]
+          targetLabel: service
+{{- end }}
