@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable resource limits
 - Grafana dashboard annotations
 
+## nextcloud-mcp-server-0.78.0 (2026-06-11)
+
+### Feat
+
+- **nextcloud-mcp-server**: scrape ingest-worker metrics via Service + ServiceMonitor
+
 ## nextcloud-mcp-server-0.77.1 (2026-06-11)
 
 ### Fix
