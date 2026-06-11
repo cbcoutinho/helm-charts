@@ -1,0 +1,27 @@
+{{- if and .Values.ingest.splitWorker .Values.observability.metrics.enabled }}
+{{- /*
+Headless metrics-only Service for the ingest worker (Deck #310). The worker runs
+no HTTP server, so this exists solely to give the worker ServiceMonitor a scrape
+target for the Prometheus port the worker CLI serves when METRICS_ENABLED
+(nextcloud-mcp-server #890). Scoped to component=ingest-worker so it is disjoint
+from the API Service, which is now scoped to component=api.
+*/}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "nextcloud-mcp-server.fullname" . }}-worker
+  labels:
+    {{- include "nextcloud-mcp-server.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ingest-worker
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - port: {{ .Values.observability.metrics.port }}
+      targetPort: metrics
+      protocol: TCP
+      name: metrics
+  selector:
+    {{- include "nextcloud-mcp-server.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: ingest-worker
+{{- end }}

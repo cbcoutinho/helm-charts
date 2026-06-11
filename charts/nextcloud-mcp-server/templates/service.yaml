@@ -4,6 +4,7 @@ metadata:
   name: {{ include "nextcloud-mcp-server.fullname" . }}
   labels:
     {{- include "nextcloud-mcp-server.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
   {{- with .Values.service.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
@@ -29,3 +30,6 @@ spec:
     {{- end }}
   selector:
     {{- include "nextcloud-mcp-server.selectorLabels" . | nindent 4 }}
+    # Scope to the API pods only; the ingest-worker pods (a label superset of
+    # selectorLabels) are scraped via their own Service (Deck #310).
+    app.kubernetes.io/component: api
