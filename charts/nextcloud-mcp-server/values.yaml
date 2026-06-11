@@ -583,7 +583,20 @@ ingest:
     # Max concurrent jobs per worker (CLI -c). Empty → the server default
     # (VECTOR_SYNC_PROCESSOR_WORKERS).
     concurrency: ""
-    resources: {}
+    # Resource requests/limits for the worker container. Non-empty by default:
+    # an empty block is rejected outright by a namespace ResourceQuota that
+    # tracks cpu/memory ("must specify requests.cpu/limits.cpu/…"), which leaves
+    # the worker Deployment stuck at 0 replicas (FailedCreate). The worker
+    # offloads OCR (Mistral API) and embeddings (gateway API) over the network,
+    # so it is mostly IO-bound; the memory headroom covers PyMuPDF parsing of
+    # large PDFs. Override per environment as needed.
+    resources:
+      requests:
+        cpu: 100m
+        memory: 512Mi
+      limits:
+        cpu: "1"
+        memory: 1Gi
     nodeSelector: {}
     tolerations: []
     affinity: {}
