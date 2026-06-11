@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable resource limits
 - Grafana dashboard annotations
 
+## nextcloud-mcp-server-0.77.1 (2026-06-11)
+
+### Fix
+
+- **helm**: set non-empty default resources for the ingest worker
+
 ## nextcloud-mcp-server-0.77.0 (2026-06-10)
 
 ### Feat
