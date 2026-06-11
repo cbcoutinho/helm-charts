@@ -3,7 +3,7 @@ name: nextcloud-mcp-server
 description: A Helm chart for deploying Nextcloud MCP Server - enables AI assistants to interact with Nextcloud
 type: application
 version: 0.77.1
-appVersion: "0.113.0"
+appVersion: "0.113.1"
 keywords:
   - nextcloud
   - mcp
@@ -32,7 +32,7 @@ annotations:
     - kind: changed
       description: "scope the API Service/ServiceMonitor to component=api so worker pods are not double-scraped"
     - kind: changed
-      description: "bump appVersion to 0.113.0 (worker now serves /metrics and structured logs)"
+      description: "bump appVersion to 0.113.1 (worker now serves /metrics and structured logs; resilient embed retries)"
 dependencies:
   - name: qdrant
     version: "1.18.2"
