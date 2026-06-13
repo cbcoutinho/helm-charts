@@ -29,7 +29,13 @@ the pre-#324 single worker.
 {{- $name := $tier.name | default "" }}
 {{- $concurrency := $tier.concurrency | default $w.concurrency }}
 {{- $resources := $tier.resources | default $w.resources }}
-{{- $replicas := $tier.replicaCount | default $w.replicaCount }}
+{{- /* `| default` treats 0 as empty, so a per-tier `replicaCount: 0` (the
+       control plane's ResourceQuota-safe floor: let KEDA scale each fleet up
+       from 0 rather than starting N×tiers Pods that breach the quota before
+       the HPA reconciles) would wrongly fall back to $w.replicaCount. Honor an
+       explicitly-set per-tier value — including 0 — via hasKey. */ -}}
+{{- $replicas := $w.replicaCount }}
+{{- if hasKey $tier "replicaCount" }}{{- $replicas = $tier.replicaCount }}{{- end }}
 {{- $nodeSelector := $tier.nodeSelector | default $w.nodeSelector }}
 {{- $affinity := $tier.affinity | default $w.affinity }}
 {{- $tolerations := $tier.tolerations | default $w.tolerations }}
