@@ -2,7 +2,7 @@ apiVersion: v2
 name: nextcloud-mcp-server
 description: A Helm chart for deploying Nextcloud MCP Server - enables AI assistants to interact with Nextcloud
 type: application
-version: 0.81.0
+version: 0.82.0
 appVersion: "0.117.0"
 keywords:
   - nextcloud
@@ -27,12 +27,8 @@ annotations:
   grafana_dashboard: "true"
   grafana_dashboard_folder: "Nextcloud MCP"
   artifacthub.io/changes: |
-    - kind: changed
-      description: "bump nextcloud-mcp-server appVersion to 0.113.1"
-    - kind: changed
-      description: "bump nextcloud-mcp-server appVersion to 0.113.0"
     - kind: added
-      description: "scrape ingest-worker metrics via Service + ServiceMonitor"
+      description: "per-tier ingest worker Deployments"
 dependencies:
   - name: qdrant
     version: "1.18.2"
