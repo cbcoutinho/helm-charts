@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable resource limits
 - Grafana dashboard annotations
 
+## nextcloud-mcp-server-0.82.1 (2026-06-13)
+
+### Fix
+
+- **nextcloud-mcp-server**: honor per-tier replicaCount: 0 in ingest workers
+
 ## nextcloud-mcp-server-0.82.0 (2026-06-13)
 
 ### Feat
