@@ -603,6 +603,36 @@ ingest:
     nodeSelector: {}
     tolerations: []
     affinity: {}
+    # Per-tier worker fleets (Deck #324). Empty (default) → a SINGLE
+    # "<release>-worker" Deployment running `worker` with no --tier, which drains
+    # every ingest tier queue (fast/structured/ocr) — today's behaviour.
+    #
+    # When non-empty, render one Deployment per entry
+    # ("<release>-worker-<name>", `worker --tier <name>`) so the tiers scale
+    # independently behind their own KEDA ScaledObjects (platform layer, keyed on
+    # the per-tier queue depth). Each entry overrides the worker settings above
+    # for that tier, falling back to them when a field is omitted:
+    #   - name        (required) — tier: fast | structured | ocr. Becomes the
+    #                  Deployment name suffix and the `worker --tier` argument.
+    #   - replicaCount (optional) — static floor (KEDA owns it once a ScaledObject
+    #                  targets the Deployment); defaults to worker.replicaCount.
+    #   - concurrency  (optional) — per-tier CLI -c; defaults to worker.concurrency.
+    #   - resources    (optional) — per-tier requests/limits; defaults to
+    #                  worker.resources. Size per tier: fast is CPU-light,
+    #                  structured (docling, later) wants more memory, ocr is
+    #                  network-light.
+    #   - nodeSelector / tolerations / affinity (optional) — default to worker.*.
+    #
+    # Example:
+    #   tiers:
+    #     - name: fast
+    #       resources: { requests: { cpu: 250m, memory: 1Gi }, limits: { cpu: "1", memory: 2Gi } }
+    #     - name: structured
+    #       resources: { requests: { cpu: 250m, memory: 2Gi }, limits: { cpu: "1", memory: 4Gi } }
+    #     - name: ocr
+    #       concurrency: "2"
+    #       resources: { requests: { cpu: 100m, memory: 512Mi }, limits: { cpu: 500m, memory: 1Gi } }
+    tiers: []
 
 # Document Chunking Configuration
 # Controls how documents are split into chunks before embedding

@@ -1,99 +1,143 @@
 {{- if .Values.ingest.splitWorker }}
 {{- /*
-Ingest worker Deployment (Deck #183). Only rendered when ingest.splitWorker is
-true: drains the per-tenant procrastinate Postgres queue (fetch → chunk → embed
-→ upsert Qdrant). Shares the API container env verbatim via the
-`nextcloud-mcp-server.containerEnv` helper; only the command, INGEST_QUEUE and
+Ingest worker Deployment(s) (Deck #183; per-tier fleets #324). Only rendered when
+ingest.splitWorker is true: drains the per-tenant procrastinate Postgres queue
+(fetch → chunk → embed → upsert Qdrant). Shares the API container env verbatim
+via `nextcloud-mcp-server.containerEnv`; only the command, INGEST_QUEUE and
 MCP_ROLE differ. Replicas are a floor — apply a KEDA ScaledObject (platform
-layer) targeting this Deployment by name for scale-to-zero on queue depth.
+layer) targeting each Deployment by name for scale-to-zero on queue depth.
+
+Topology: when `ingest.worker.tiers` is set, one Deployment per tier
+(`<fullname>-worker-<tier>`, `worker --tier <name>`) so a CPU-bound `fast` fleet,
+an in-cluster `structured` fleet, and a paid `ocr` fleet scale independently. The
+worker with no --tier drains ALL tier queues, so an empty `tiers` list renders a
+single `<fullname>-worker` (today's behaviour). Each tier overrides
+resources/concurrency/replicaCount/scheduling, falling back to ingest.worker.*.
+
+All tier Deployments keep `component: ingest-worker` (so the single worker
+Service + ServiceMonitor scrape every tier's /metrics; per-tier breakdown comes
+from the `tier` label on the astrolabe_* metrics) and add a unique
+`nextcloud-mcp-server/ingest-tier` label to give each Deployment a distinct
+selector.
+
+The range defaults to a single empty-dict element so the no-tiers path renders
+exactly one Deployment with no tier suffix/label/--tier — byte-compatible with
+the pre-#324 single worker.
 */}}
+{{- $w := .Values.ingest.worker }}
+{{- range $tier := ($w.tiers | default (list (dict))) }}
+{{- $name := $tier.name | default "" }}
+{{- $concurrency := $tier.concurrency | default $w.concurrency }}
+{{- $resources := $tier.resources | default $w.resources }}
+{{- $replicas := $tier.replicaCount | default $w.replicaCount }}
+{{- $nodeSelector := $tier.nodeSelector | default $w.nodeSelector }}
+{{- $affinity := $tier.affinity | default $w.affinity }}
+{{- $tolerations := $tier.tolerations | default $w.tolerations }}
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "nextcloud-mcp-server.fullname" . }}-worker
+  name: {{ include "nextcloud-mcp-server.fullname" $ }}-worker{{ if $name }}-{{ $name }}{{ end }}
   labels:
-    {{- include "nextcloud-mcp-server.labels" . | nindent 4 }}
+    {{- include "nextcloud-mcp-server.labels" $ | nindent 4 }}
     app.kubernetes.io/component: ingest-worker
+    {{- if $name }}
+    nextcloud-mcp-server/ingest-tier: {{ $name | quote }}
+    {{- end }}
 spec:
-  replicas: {{ .Values.ingest.worker.replicaCount }}
+  replicas: {{ $replicas }}
   selector:
     matchLabels:
-      {{- include "nextcloud-mcp-server.selectorLabels" . | nindent 6 }}
+      {{- include "nextcloud-mcp-server.selectorLabels" $ | nindent 6 }}
       app.kubernetes.io/component: ingest-worker
+      {{- if $name }}
+      nextcloud-mcp-server/ingest-tier: {{ $name | quote }}
+      {{- end }}
   template:
     metadata:
       annotations:
-        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
-        {{- with .Values.podAnnotations }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") $ | sha256sum }}
+        {{- with $.Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
       labels:
-        {{- include "nextcloud-mcp-server.labels" . | nindent 8 }}
+        {{- include "nextcloud-mcp-server.labels" $ | nindent 8 }}
         app.kubernetes.io/component: ingest-worker
-        {{- with .Values.podLabels }}
+        {{- if $name }}
+        nextcloud-mcp-server/ingest-tier: {{ $name | quote }}
+        {{- end }}
+        {{- with $.Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
-      {{- with .Values.imagePullSecrets }}
+      {{- with $.Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "nextcloud-mcp-server.serviceAccountName" . }}
+      serviceAccountName: {{ include "nextcloud-mcp-server.serviceAccountName" $ }}
       securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
-      {{- with .Values.initContainers }}
+        {{- toYaml $.Values.podSecurityContext | nindent 8 }}
+      {{- with $.Values.initContainers }}
       initContainers:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       containers:
-        - name: {{ .Chart.Name }}-worker
+        - name: {{ $.Chart.Name }}-worker
           securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ include "nextcloud-mcp-server.imageTag" . }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+            {{- toYaml $.Values.securityContext | nindent 12 }}
+          image: "{{ $.Values.image.repository }}:{{ include "nextcloud-mcp-server.imageTag" $ }}"
+          imagePullPolicy: {{ $.Values.image.pullPolicy }}
           # Override the image's default `run` entrypoint to drain the queue.
+          # With --tier, this worker drains only that tier's queue; without it
+          # (single-worker fallback) it drains every ingest tier queue.
           command:
             - "/app/.venv/bin/nextcloud-mcp-server"
             - "worker"
-          {{- if .Values.ingest.worker.concurrency }}
+          {{- if or $name $concurrency }}
           args:
+            {{- if $name }}
+            - "--tier"
+            - {{ $name | quote }}
+            {{- end }}
+            {{- if $concurrency }}
             - "--concurrency"
-            - {{ .Values.ingest.worker.concurrency | quote }}
+            - {{ $concurrency | quote }}
+            {{- end }}
           {{- end }}
-          {{- if .Values.observability.metrics.enabled }}
+          {{- if $.Values.observability.metrics.enabled }}
           # The worker CLI starts the Prometheus server on METRICS_PORT when
           # METRICS_ENABLED (nextcloud-mcp-server #890). Expose it as a named
           # port so the worker Service + ServiceMonitor can scrape it (Deck #310).
           ports:
             - name: metrics
-              containerPort: {{ .Values.observability.metrics.port }}
+              containerPort: {{ $.Values.observability.metrics.port }}
               protocol: TCP
           {{- end }}
           env:
-{{- include "nextcloud-mcp-server.containerEnv" . }}
+{{- include "nextcloud-mcp-server.containerEnv" $ }}
             # Ingest worker role (Deck #183): drains the procrastinate queue.
             - name: INGEST_QUEUE
               value: "postgres"
             - name: MCP_ROLE
               value: "worker"
-          {{- with .Values.extraEnvFrom }}
+          {{- with $.Values.extraEnvFrom }}
           envFrom:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           resources:
-            {{- toYaml .Values.ingest.worker.resources | nindent 12 }}
+            {{- toYaml $resources | nindent 12 }}
           volumeMounts:
             - name: tmp
               mountPath: /tmp
             - name: data-storage
               mountPath: /app/data
-            {{- if .Values.database.caBundleSecret.name }}
+            {{- if $.Values.database.caBundleSecret.name }}
             - name: database-ca-bundle
-              mountPath: {{ .Values.database.caBundleSecret.mountPath | quote }}
-              subPath: {{ .Values.database.caBundleSecret.key | quote }}
+              mountPath: {{ $.Values.database.caBundleSecret.mountPath | quote }}
+              subPath: {{ $.Values.database.caBundleSecret.key | quote }}
               readOnly: true
             {{- end }}
-            {{- with .Values.volumeMounts }}
+            {{- with $.Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
       volumes:
@@ -103,27 +147,28 @@ spec:
         # passwords; /app/data is just a writable mount for the read-only rootfs.
         - name: data-storage
           emptyDir: {}
-        {{- if .Values.database.caBundleSecret.name }}
+        {{- if $.Values.database.caBundleSecret.name }}
         - name: database-ca-bundle
           secret:
-            secretName: {{ .Values.database.caBundleSecret.name | quote }}
+            secretName: {{ $.Values.database.caBundleSecret.name | quote }}
             items:
-              - key: {{ .Values.database.caBundleSecret.key | quote }}
-                path: {{ .Values.database.caBundleSecret.key | quote }}
+              - key: {{ $.Values.database.caBundleSecret.key | quote }}
+                path: {{ $.Values.database.caBundleSecret.key | quote }}
         {{- end }}
-        {{- with .Values.volumes }}
+        {{- with $.Values.volumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-      {{- with .Values.ingest.worker.nodeSelector }}
+      {{- with $nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.ingest.worker.affinity }}
+      {{- with $affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.ingest.worker.tolerations }}
+      {{- with $tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+{{- end }}
 {{- end }}
