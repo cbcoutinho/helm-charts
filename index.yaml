@@ -3,6 +3,50 @@ entries:
   nextcloud-mcp-server:
   - annotations:
       artifacthub.io/changes: |
+        - kind: fixed
+          description: "honor per-tier replicaCount: 0 in ingest workers"
+      grafana_dashboard: "true"
+      grafana_dashboard_folder: Nextcloud MCP
+    apiVersion: v2
+    appVersion: 0.117.0
+    created: "2026-06-13T17:58:35.867827525Z"
+    dependencies:
+    - condition: qdrant.networkMode.deploySubchart
+      name: qdrant
+      repository: https://qdrant.github.io/qdrant-helm
+      version: 1.18.2
+    - condition: ollama.enabled
+      name: ollama
+      repository: https://otwld.github.io/ollama-helm
+      version: 1.60.0
+    description: A Helm chart for deploying Nextcloud MCP Server - enables AI assistants
+      to interact with Nextcloud
+    digest: 1f6c4310435283db917eff52e5bb398cd0bd77e706e2940e8354bd5e6479a90f
+    home: https://github.com/cbcoutinho/nextcloud-mcp-server
+    icon: https://raw.githubusercontent.com/nextcloud/server/master/core/img/logo/logo.svg
+    keywords:
+    - nextcloud
+    - mcp
+    - model-context-protocol
+    - llm
+    - ai
+    - claude
+    - webdav
+    - caldav
+    - carddav
+    - helm
+    maintainers:
+    - email: chris@coutinho.io
+      name: Chris Coutinho
+    name: nextcloud-mcp-server
+    sources:
+    - https://github.com/cbcoutinho/nextcloud-mcp-server
+    type: application
+    urls:
+    - https://github.com/cbcoutinho/helm-charts/releases/download/nextcloud-mcp-server-0.82.1/nextcloud-mcp-server-0.82.1.tgz
+    version: 0.82.1
+  - annotations:
+      artifacthub.io/changes: |
         - kind: added
           description: "per-tier ingest worker Deployments"
       grafana_dashboard: "true"
@@ -2725,4 +2769,4 @@ entries:
     urls:
     - https://github.com/cbcoutinho/helm-charts/releases/download/nextcloud-mcp-server-0.59.1/nextcloud-mcp-server-0.59.1.tgz
     version: 0.59.1
-generated: "2026-06-13T16:15:25.820013315Z"
+generated: "2026-06-13T17:58:35.868098308Z"
