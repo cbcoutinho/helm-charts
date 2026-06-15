@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable resource limits
 - Grafana dashboard annotations
 
+## nextcloud-mcp-server-0.83.0 (2026-06-15)
+
+### Feat
+
+- **helm**: add first-class WEBHOOK_SECRET support for app 0.117.2
+
 ## nextcloud-mcp-server-0.82.2 (2026-06-15)
 
 ## nextcloud-mcp-server-0.82.1 (2026-06-13)
