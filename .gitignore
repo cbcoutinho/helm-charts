@@ -1,0 +1,7 @@
+# Generated at release time by scripts/render-release-notes.sh and consumed by
+# chart-releaser as the GitHub Release body; never committed.
+charts/*/release-notes.md
+
+# chart-releaser working dirs
+.cr-release-packages/
+.cr-index/

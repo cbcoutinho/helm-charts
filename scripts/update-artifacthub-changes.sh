@@ -40,9 +40,12 @@ git log --format="%s" $log_range | while IFS= read -r msg; do
     [[ "$msg" =~ ^(Merge|bump:) ]] && continue
 
     # Match conventional commit format: type(scope)!: description
-    if [[ "$msg" =~ ^(feat|fix|docs|refactor|perf|build|chore|security)\(.*\)\!?:\ (.+) ]]; then
+    # The (scope) is optional, matching the chart's .cz.toml changelog_pattern,
+    # so scope-less commits (e.g. "feat: ...") are captured too. The optional
+    # scope is its own group, so the description is BASH_REMATCH[3], not [2].
+    if [[ "$msg" =~ ^(feat|fix|docs|refactor|perf|build|chore|security)(\(.*\))?\!?:\ (.+) ]]; then
         kind=$(map_kind "${BASH_REMATCH[1]}")
-        desc="${BASH_REMATCH[2]}"
+        desc="${BASH_REMATCH[3]}"
         # Escape double quotes in description
         desc="${desc//\"/\\\"}"
         echo "- kind: $kind"              >> "$changes_file"
