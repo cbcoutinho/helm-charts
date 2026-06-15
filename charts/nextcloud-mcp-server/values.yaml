@@ -539,6 +539,42 @@ extraEnvFrom: []
 # - secretRef:
 #     name: my-secret
 
+# Webhook delivery authentication (ADR-010, GHSA-8vh3-g2qg-2h2c).
+#
+# As of app version 0.117.2 a webhook secret is REQUIRED to enable webhooks.
+# When configured, the MCP server mounts the /webhooks/nextcloud receiver
+# route, registers webhooks with Nextcloud using
+# `Authorization: Bearer <secret>`, and validates that header on every
+# delivery. When unset, the receiver route is NOT mounted, the receiver
+# refuses any request that reaches it (503), and registration refuses to
+# create webhooks — vector sync then falls back to the periodic polling
+# scanner. Leave this block empty to keep webhooks disabled.
+#
+# These env vars are injected only into the API pod (the receiver route and
+# registrar live there); the ingest worker drains the queue and never handles
+# webhooks.
+webhooks:
+  # Inline webhook secret (WEBHOOK_SECRET). MUST be at least 16 characters
+  # (the server fails fast at startup otherwise). Ignored when
+  # existingSecret is set. Generate with e.g.:
+  #   python -c "import secrets; print(secrets.token_urlsafe(32))"
+  secret: ""
+  # Reference an existing Secret holding the webhook secret instead of
+  # having the chart create one. Must contain the key named in secretKey.
+  # Example:
+  #   kubectl create secret generic my-webhook-secret \
+  #     --from-literal=webhook-secret=$(python -c "import secrets; print(secrets.token_urlsafe(32))")
+  existingSecret: ""
+  # Key in the Secret that holds the webhook secret.
+  secretKey: "webhook-secret"
+  # Internal URL override for webhook registration (WEBHOOK_INTERNAL_URL).
+  # Highest-priority source for the callback URL registered with Nextcloud,
+  # above nextcloud.mcpServerUrl and docker autodetection. Set this when
+  # Nextcloud must reach the MCP server at a cluster-internal Service URL
+  # that differs from the public mcpServerUrl.
+  # Example: http://my-release-nextcloud-mcp-server:8000
+  internalUrl: ""
+
 # Semantic Search Configuration
 # Enable semantic search with BM25 hybrid search and background synchronization
 # of Nextcloud content into vector database

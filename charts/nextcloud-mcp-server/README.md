@@ -228,6 +228,23 @@ The application exposes HTTP health check endpoints:
 | `documentProcessing.unstructured.apiUrl` | Unstructured API URL | `http://unstructured:8000` |
 | `documentProcessing.tesseract.enabled` | Enable Tesseract OCR | `false` |
 
+#### Webhooks (Optional)
+
+Nextcloud can push change events to the MCP server so vector sync reacts in near real-time instead of waiting for the next polling scan. As of app version **0.117.2** a webhook secret is **required** to enable webhooks ([GHSA-8vh3-g2qg-2h2c](https://github.com/cbcoutinho/nextcloud-mcp-server/security/advisories/GHSA-8vh3-g2qg-2h2c)).
+
+When a webhook secret is configured the server mounts the `/webhooks/nextcloud` receiver, registers webhooks with Nextcloud using `Authorization: Bearer <secret>`, and validates that header on every delivery. When **unset** the receiver route is not mounted, the receiver refuses requests (`503`), and registration is skipped — vector sync still works via the periodic polling scanner.
+
+These env vars are injected only into the API pod; the ingest worker (`ingest.splitWorker: true`) drains the queue and never handles webhooks.
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `webhooks.secret` | Inline webhook secret (`WEBHOOK_SECRET`). **Must be ≥16 characters.** Ignored if `existingSecret` is set | `""` |
+| `webhooks.existingSecret` | Use an existing Secret holding the webhook secret instead of creating one | `""` |
+| `webhooks.secretKey` | Key in the Secret that holds the webhook secret | `webhook-secret` |
+| `webhooks.internalUrl` | Internal callback URL registered with Nextcloud (`WEBHOOK_INTERNAL_URL`); wins over `nextcloud.mcpServerUrl` and autodetection | `""` |
+
+Generate a secret with e.g. `python -c "import secrets; print(secrets.token_urlsafe(32))"`.
+
 #### Vector Search & Semantic Capabilities (Optional)
 
 Enable semantic search capabilities with BM25 hybrid search by deploying a vector database (Qdrant) and embedding service (Ollama or OpenAI).
