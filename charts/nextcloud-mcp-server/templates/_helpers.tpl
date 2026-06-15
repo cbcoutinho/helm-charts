@@ -178,6 +178,17 @@ Create the name of the secret to use for Qdrant sidecar API key
 {{- end }}
 
 {{/*
+Create the name of the secret to use for the webhook delivery secret
+*/}}
+{{- define "nextcloud-mcp-server.webhookSecretName" -}}
+{{- if .Values.webhooks.existingSecret }}
+{{- .Values.webhooks.existingSecret }}
+{{- else }}
+{{- include "nextcloud-mcp-server.fullname" . }}-webhook
+{{- end }}
+{{- end }}
+
+{{/*
 Determine if data storage PVC should be enabled (backward compatible)
 Checks new dataStorage.enabled OR legacy persistence configs.
 

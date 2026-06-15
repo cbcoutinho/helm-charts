@@ -71,6 +71,25 @@ spec:
             {{- end }}
           env:
 {{- include "nextcloud-mcp-server.containerEnv" . }}
+            # Webhook delivery authentication (ADR-010, GHSA-8vh3-g2qg-2h2c).
+            # API-only: the receiver route + registrar live in the API pod;
+            # the ingest worker drains the queue and never handles webhooks.
+            # When set, the server mounts /webhooks/nextcloud and registers
+            # authenticated webhooks; when unset webhooks are disabled and
+            # vector sync falls back to the polling scanner.
+            {{- if or .Values.webhooks.secret .Values.webhooks.existingSecret }}
+            - name: WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "nextcloud-mcp-server.webhookSecretName" . }}
+                  key: {{ .Values.webhooks.secretKey }}
+            {{- end }}
+            {{- with .Values.webhooks.internalUrl }}
+            # Internal callback URL registered with Nextcloud (wins over
+            # NEXTCLOUD_MCP_SERVER_URL and docker autodetection).
+            - name: WEBHOOK_INTERNAL_URL
+              value: {{ . | quote }}
+            {{- end }}
             # Ingest queue backend (Deck #183). procrastinate is opt-in via
             # ingest.splitWorker; the default (memory) keeps document processing
             # in-process (anyio task groups), so a Postgres DATABASE_URL alone
