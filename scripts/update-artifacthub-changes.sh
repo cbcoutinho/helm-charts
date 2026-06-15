@@ -35,14 +35,17 @@ changes_file=$(mktemp)
 trap 'rm -f "$changes_file"' EXIT
 
 # Parse conventional commits, skip merge/bump commits and CI-only types
-git log --format="%s" $log_range | while IFS= read -r msg; do
+git log --format="%s" "$log_range" | while IFS= read -r msg; do
     # Skip merge commits and bump commits
     [[ "$msg" =~ ^(Merge|bump:) ]] && continue
 
     # Match conventional commit format: type(scope)!: description
-    if [[ "$msg" =~ ^(feat|fix|docs|refactor|perf|build|chore|security)\(.*\)\!?:\ (.+) ]]; then
+    # The (scope) is optional, matching the chart's .cz.toml changelog_pattern,
+    # so scope-less commits (e.g. "feat: ...") are captured too. The optional
+    # scope is its own group, so the description is BASH_REMATCH[3], not [2].
+    if [[ "$msg" =~ ^(feat|fix|docs|refactor|perf|build|chore|security)(\(.*\))?\!?:\ (.+) ]]; then
         kind=$(map_kind "${BASH_REMATCH[1]}")
-        desc="${BASH_REMATCH[2]}"
+        desc="${BASH_REMATCH[3]}"
         # Escape double quotes in description
         desc="${desc//\"/\\\"}"
         echo "- kind: $kind"              >> "$changes_file"
@@ -58,4 +61,7 @@ fi
 echo "Updating artifacthub.io/changes annotation for $CHART_NAME:"
 cat "$changes_file"
 
-yq -i ".annotations[\"artifacthub.io/changes\"] = load_str(\"$changes_file\")" "$CHART_DIR/Chart.yaml"
+# Pass the temp-file path via env() rather than interpolating it into the yq
+# expression, so a path with spaces/quotes/backslashes can't break the expression.
+YQ_CHANGES_FILE="$changes_file" \
+    yq -i '.annotations["artifacthub.io/changes"] = load_str(env(YQ_CHANGES_FILE))' "$CHART_DIR/Chart.yaml"
