@@ -35,7 +35,7 @@ changes_file=$(mktemp)
 trap 'rm -f "$changes_file"' EXIT
 
 # Parse conventional commits, skip merge/bump commits and CI-only types
-git log --format="%s" $log_range | while IFS= read -r msg; do
+git log --format="%s" "$log_range" | while IFS= read -r msg; do
     # Skip merge commits and bump commits
     [[ "$msg" =~ ^(Merge|bump:) ]] && continue
 

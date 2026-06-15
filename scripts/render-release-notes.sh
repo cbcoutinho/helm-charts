@@ -21,18 +21,39 @@ fi
 
 version=$(yq '.version' "$CHART_YAML")
 
-# Render the artifacthub.io/changes annotation (itself a YAML list embedded as a
-# block string) into Markdown bullets. Empty/missing annotation -> empty output,
-# in which case we skip writing the file so `cr` falls back to the description.
-notes=$(
-    yq '.annotations["artifacthub.io/changes"] // ""' "$CHART_YAML" \
-        | yq -p yaml '.[] | "- **" + .kind + "**: " + .description' 2>/dev/null \
-        || true
-)
-
-if [ -z "$notes" ]; then
+# The artifacthub.io/changes annotation is itself a YAML list embedded as a
+# block string. Missing/empty -> nothing to render, so leave the release body to
+# the chart description (cr's built-in fallback).
+raw_changes=$(yq '.annotations["artifacthub.io/changes"] // ""' "$CHART_YAML")
+if [ -z "$raw_changes" ]; then
     echo "No artifacthub.io/changes entries for $CHART_NAME, leaving release notes to chart description"
     exit 0
+fi
+
+# Render only well-formed entries (both kind and description present) into
+# Markdown bullets, so malformed items don't produce junk like "- ****:". If a
+# NON-empty annotation yields no usable entries (invalid YAML or every item
+# missing fields), warn rather than silently shipping the description.
+total=$(printf '%s\n' "$raw_changes" | yq -p yaml 'length' 2>/dev/null || echo 0)
+notes=$(printf '%s\n' "$raw_changes" \
+    | yq -p yaml '.[] | select(has("kind") and has("description")) | "- **" + .kind + "**: " + .description' 2>/dev/null || true)
+if [ -z "$notes" ]; then
+    echo "Warning: $CHART_NAME has a non-empty artifacthub.io/changes annotation that produced no usable entries (invalid YAML or items missing kind/description); leaving release notes to chart description" >&2
+    exit 0
+fi
+
+# Warn (but proceed) if some entries were dropped as malformed.
+rendered=$(printf '%s\n' "$notes" | grep -c '^- ' || true)
+if [ "$total" -gt 0 ] && [ "$rendered" -lt "$total" ]; then
+    echo "Warning: $CHART_NAME release notes dropped $((total - rendered)) of $total artifacthub.io/changes entries (missing kind/description)" >&2
+fi
+
+# cr reads release-notes.md from the *packaged* chart, so it must not be stripped
+# by .helmignore. We can't fully evaluate glob semantics here, but warn loudly on
+# the obvious patterns so a new chart doesn't silently regress to the description.
+if [ -f "$CHART_DIR/.helmignore" ] \
+    && grep -qE '^[[:space:]]*(\*|\*\.md|release-notes(\.md|\*)?)[[:space:]]*$' "$CHART_DIR/.helmignore"; then
+    echo "Warning: $CHART_DIR/.helmignore may exclude release-notes.md from the package; cr would fall back to the chart description" >&2
 fi
 
 {
