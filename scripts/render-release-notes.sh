@@ -24,7 +24,7 @@ version=$(yq -r '.version' "$CHART_YAML")
 # The artifacthub.io/changes annotation is itself a YAML list embedded as a
 # block string. Missing/empty -> nothing to render, so leave the release body to
 # the chart description (cr's built-in fallback).
-raw_changes=$(yq '.annotations["artifacthub.io/changes"] // ""' "$CHART_YAML")
+raw_changes=$(yq -r '.annotations["artifacthub.io/changes"] // ""' "$CHART_YAML")
 if [ -z "$raw_changes" ]; then
     echo "No artifacthub.io/changes entries for $CHART_NAME, leaving release notes to chart description"
     exit 0

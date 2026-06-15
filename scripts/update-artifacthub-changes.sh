@@ -61,4 +61,7 @@ fi
 echo "Updating artifacthub.io/changes annotation for $CHART_NAME:"
 cat "$changes_file"
 
-yq -i ".annotations[\"artifacthub.io/changes\"] = load_str(\"$changes_file\")" "$CHART_DIR/Chart.yaml"
+# Pass the temp-file path via env() rather than interpolating it into the yq
+# expression, so a path with spaces/quotes/backslashes can't break the expression.
+YQ_CHANGES_FILE="$changes_file" \
+    yq -i '.annotations["artifacthub.io/changes"] = load_str(env(YQ_CHANGES_FILE))' "$CHART_DIR/Chart.yaml"
