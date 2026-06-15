@@ -19,7 +19,7 @@ if [ ! -f "$CHART_YAML" ]; then
     exit 1
 fi
 
-version=$(yq '.version' "$CHART_YAML")
+version=$(yq -r '.version' "$CHART_YAML")
 
 # The artifacthub.io/changes annotation is itself a YAML list embedded as a
 # block string. Missing/empty -> nothing to render, so leave the release body to
@@ -35,8 +35,11 @@ fi
 # NON-empty annotation yields no usable entries (invalid YAML or every item
 # missing fields), warn rather than silently shipping the description.
 total=$(printf '%s\n' "$raw_changes" | yq -p yaml 'length' 2>/dev/null || echo 0)
+# -r/--raw-output: emit raw strings. Without it, yq serialises a string that
+# starts with "- " as a YAML-quoted scalar on some versions, producing literal
+# quotes in the Markdown (and breaking the '^- ' counter below).
 notes=$(printf '%s\n' "$raw_changes" \
-    | yq -p yaml '.[] | select(has("kind") and has("description")) | "- **" + .kind + "**: " + .description' 2>/dev/null || true)
+    | yq -p yaml -r '.[] | select(has("kind") and has("description")) | "- **" + .kind + "**: " + .description' 2>/dev/null || true)
 if [ -z "$notes" ]; then
     echo "Warning: $CHART_NAME has a non-empty artifacthub.io/changes annotation that produced no usable entries (invalid YAML or items missing kind/description); leaving release notes to chart description" >&2
     exit 0
