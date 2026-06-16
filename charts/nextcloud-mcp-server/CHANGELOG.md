@@ -14,6 +14,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable resource limits
 - Grafana dashboard annotations
 
+## nextcloud-mcp-server-0.84.0 (2026-06-16)
+
+### Feat
+
+- **ci**: surface chart changelog in GitHub Release notes
+
+### Fix
+
+- **ci**: raw-output on annotation read; harden yq load_str path
+- **ci**: use yq --raw-output when rendering release notes
+- **ci**: harden release-notes rendering and document .helmignore constraint
+
 ## nextcloud-mcp-server-0.83.0 (2026-06-15)
 
 ### Feat
