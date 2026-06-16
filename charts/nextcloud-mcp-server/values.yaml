@@ -697,6 +697,13 @@ documentPipeline:
   # Tier-0 classifier. Records classification metrics (recommended_tier,
   # text-quality) on the tiered path. Default on.
   classifyEnabled: true
+  # Tier-0 glyph-corruption trigger. When the fast (pypdfium2) extraction's
+  # doc-level C0-control-char ratio exceeds this, the text layer is treated as
+  # glyph-corrupt (a broken /ToUnicode mapping leaking raw glyph codes) and the
+  # doc escalates fast->structured (pymupdf re-extracts it correctly — no OCR).
+  # Independent of ocr.enabled: structured is free + in-cluster. Set 0 to disable.
+  # Clean docs sit ~0; affected PDFs measured ~1-11%.
+  glyphCorruptionRatio: 0.02
   # PDF parse tuning (generic).
   # Wall-clock timeout for a single PDF parse, in seconds.
   parseTimeoutSeconds: 120
