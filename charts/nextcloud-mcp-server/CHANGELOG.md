@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable resource limits
 - Grafana dashboard annotations
 
+## nextcloud-mcp-server-0.85.0 (2026-06-16)
+
+### Feat
+
+- **nextcloud-mcp-server**: expose DOCUMENT_GLYPH_CORRUPTION_RATIO
+
 ## nextcloud-mcp-server-0.84.0 (2026-06-16)
 
 ### Feat
