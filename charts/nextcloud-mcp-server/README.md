@@ -374,6 +374,7 @@ OCR backend selection is independent of the embedding provider — you can embed
 |-----------|-------------|---------|
 | `documentPipeline.tier1Engine` | Fast-tier PDF engine: `pypdfium2` (default) or `pymupdf` (deprecated rollback) | `pypdfium2` |
 | `documentPipeline.classifyEnabled` | Record tier-0 classification metrics | `true` |
+| `documentPipeline.glyphCorruptionRatio` | Doc-level C0-control-char ratio above which a glyph-corrupt (broken `/ToUnicode`) text layer escalates `fast`→`structured` (pymupdf); `0` disables | `0.02` |
 | `documentPipeline.parseTimeoutSeconds` | Per-PDF parse timeout (seconds) | `120` |
 | `documentPipeline.parseMemLimitMb` | RLIMIT_AS memory cap for the parse subprocess (MB) | `1536` |
 | `documentPipeline.pdfGraphicsLimit` | Max vector graphics per PDF before bailing (pymupdf path) | `1000` |

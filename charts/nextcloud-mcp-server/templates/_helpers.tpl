@@ -537,6 +537,9 @@ both pods stay in lock-step (Deck #183).
               value: {{ .Values.documentPipeline.tier1Engine | quote }}
             - name: DOCUMENT_CLASSIFY_ENABLED
               value: {{ .Values.documentPipeline.classifyEnabled | quote }}
+            # Tier-0 glyph-corruption -> structured escalation (not OCR-gated).
+            - name: DOCUMENT_GLYPH_CORRUPTION_RATIO
+              value: {{ .Values.documentPipeline.glyphCorruptionRatio | quote }}
             - name: DOCUMENT_PARSE_TIMEOUT_SECONDS
               value: {{ .Values.documentPipeline.parseTimeoutSeconds | quote }}
             - name: DOCUMENT_PARSE_MEM_LIMIT_MB
