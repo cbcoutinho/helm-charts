@@ -4,6 +4,59 @@ entries:
   - annotations:
       artifacthub.io/changes: |
         - kind: added
+          description: "bump appVersion to 0.120.5"
+        - kind: changed
+          description: "re-trigger PR review"
+        - kind: fixed
+          description: "add kubeVersion guard and document PDB 0-value caveat"
+        - kind: fixed
+          description: "guard PDB minAvailable/maxUnavailable + document upgrade interaction"
+        - kind: added
+          description: "add opt-in PodDisruptionBudget for the API deployment"
+      grafana_dashboard: "true"
+      grafana_dashboard_folder: Nextcloud MCP
+    apiVersion: v2
+    appVersion: 0.120.5
+    created: "2026-06-17T19:50:05.429480876Z"
+    dependencies:
+    - condition: qdrant.networkMode.deploySubchart
+      name: qdrant
+      repository: https://qdrant.github.io/qdrant-helm
+      version: 1.18.2
+    - condition: ollama.enabled
+      name: ollama
+      repository: https://otwld.github.io/ollama-helm
+      version: 1.61.0
+    description: A Helm chart for deploying Nextcloud MCP Server - enables AI assistants
+      to interact with Nextcloud
+    digest: 1f4dd76b1989e2637374b910b09053957ec09e53085a498a1877428528180334
+    home: https://github.com/cbcoutinho/nextcloud-mcp-server
+    icon: https://raw.githubusercontent.com/nextcloud/server/master/core/img/logo/logo.svg
+    keywords:
+    - nextcloud
+    - mcp
+    - model-context-protocol
+    - llm
+    - ai
+    - claude
+    - webdav
+    - caldav
+    - carddav
+    - helm
+    kubeVersion: '>=1.21.0-0'
+    maintainers:
+    - email: chris@coutinho.io
+      name: Chris Coutinho
+    name: nextcloud-mcp-server
+    sources:
+    - https://github.com/cbcoutinho/nextcloud-mcp-server
+    type: application
+    urls:
+    - https://github.com/cbcoutinho/helm-charts/releases/download/nextcloud-mcp-server-0.86.0/nextcloud-mcp-server-0.86.0.tgz
+    version: 0.86.0
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: added
           description: "expose DOCUMENT_GLYPH_CORRUPTION_RATIO"
       grafana_dashboard: "true"
       grafana_dashboard_folder: Nextcloud MCP
@@ -2959,4 +3012,4 @@ entries:
     urls:
     - https://github.com/cbcoutinho/helm-charts/releases/download/nextcloud-mcp-server-0.59.1/nextcloud-mcp-server-0.59.1.tgz
     version: 0.59.1
-generated: "2026-06-16T19:20:57.12733062Z"
+generated: "2026-06-17T19:50:05.429807344Z"
