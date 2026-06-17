@@ -1,0 +1,22 @@
+{{- if .Values.podDisruptionBudget.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "nextcloud-mcp-server.fullname" . }}
+  labels:
+    {{- include "nextcloud-mcp-server.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+spec:
+  {{- if .Values.podDisruptionBudget.minAvailable }}
+  minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
+  {{- end }}
+  {{- if .Values.podDisruptionBudget.maxUnavailable }}
+  maxUnavailable: {{ .Values.podDisruptionBudget.maxUnavailable }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "nextcloud-mcp-server.selectorLabels" . | nindent 6 }}
+      # Scope to the API workload only — the ingest-worker shares the
+      # name/instance selector labels but has its own component label.
+      app.kubernetes.io/component: api
+{{- end }}
