@@ -473,6 +473,23 @@ resources:
     cpu: 100m
     memory: 128Mi
 
+# PodDisruptionBudget for the API (backend) Deployment.
+# With a single replica, minAvailable: 1 stops voluntary disruptions —
+# notably Karpenter consolidation ("Evicted pod: Underutilized") and node
+# drains — from evicting the only API pod and bouncing it between nodes.
+# Opt-in (disabled by default): on a single-replica deployment minAvailable: 1
+# also blocks routine node drains AND `helm upgrade` (the Deployment uses the
+# Recreate strategy, which terminates the old pod first — the PDB will hold that
+# eviction until the pod is disrupted or the PDB is temporarily disabled). Set
+# it where churn protection is wanted (e.g. per-tenant gitops values). Set
+# exactly one of minAvailable / maxUnavailable, and use a positive integer —
+# `0` is treated as unset by the template guards (so e.g. maxUnavailable: 0 is
+# not supported; use minAvailable to block all voluntary disruptions instead).
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+  # maxUnavailable: 1
+
 # Liveness probe configuration
 # Checks if the application process is running
 livenessProbe:
