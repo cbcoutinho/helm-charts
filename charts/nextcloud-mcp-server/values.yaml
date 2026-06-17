@@ -733,10 +733,13 @@ documentPipeline:
   parseMemLimitMb: 1536
   # Max vector graphics per PDF before the parser bails (pymupdf path).
   pdfGraphicsLimit: 1000
-  # Tier-3 OCR for scanned / no-text-layer PDFs. Off by default; when off the
-  # fast tier is terminal.
+  # OCR escalation for scanned / no-text-layer PDFs. Two independent rungs:
+  # tier2 = in-cluster GPU (`inclusterEnabled`, gateway-only) tried first;
+  # tier3 = upstream/Mistral (`enabled`). Both off by default; when both are off
+  # the structured tier is terminal.
   ocr:
-    # Enable OCR escalation for scanned PDFs.
+    # Enable the UPSTREAM OCR rung (tier3: gateway/Mistral). Gates only this
+    # rung — the in-cluster (tier2) rung has its own `inclusterEnabled` below.
     enabled: false
     # OCR backend: "auto" | "gateway" | "mistral" | "none".
     #   mistral - Call the Mistral OCR API directly from the pod. Enable the
