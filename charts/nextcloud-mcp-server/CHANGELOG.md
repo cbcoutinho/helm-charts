@@ -14,6 +14,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable resource limits
 - Grafana dashboard annotations
 
+## nextcloud-mcp-server-0.86.0 (2026-06-17)
+
+### Feat
+
+- **nextcloud-mcp-server**: bump appVersion to 0.120.5
+- **nextcloud-mcp-server**: add opt-in PodDisruptionBudget for the API deployment
+
+### Fix
+
+- **nextcloud-mcp-server**: add kubeVersion guard and document PDB 0-value caveat
+- **nextcloud-mcp-server**: guard PDB minAvailable/maxUnavailable + document upgrade interaction
+
 ## nextcloud-mcp-server-0.85.0 (2026-06-16)
 
 ### Feat
