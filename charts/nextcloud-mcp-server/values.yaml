@@ -477,10 +477,12 @@ resources:
 # With a single replica, minAvailable: 1 stops voluntary disruptions —
 # notably Karpenter consolidation ("Evicted pod: Underutilized") and node
 # drains — from evicting the only API pod and bouncing it between nodes.
-# Opt-in (disabled by default): enabling it on a single-replica deployment
-# also blocks routine node drains, so set it where churn protection is wanted
-# (e.g. per-tenant gitops values). Set exactly one of minAvailable /
-# maxUnavailable.
+# Opt-in (disabled by default): on a single-replica deployment minAvailable: 1
+# also blocks routine node drains AND `helm upgrade` (the Deployment uses the
+# Recreate strategy, which terminates the old pod first — the PDB will hold that
+# eviction until the pod is disrupted or the PDB is temporarily disabled). Set
+# it where churn protection is wanted (e.g. per-tenant gitops values). Set
+# exactly one of minAvailable / maxUnavailable.
 podDisruptionBudget:
   enabled: false
   minAvailable: 1
