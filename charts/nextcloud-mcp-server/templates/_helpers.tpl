@@ -553,8 +553,6 @@ both pods stay in lock-step (Deck #183).
               value: {{ .Values.documentPipeline.ocr.provider | quote }}
             - name: DOCUMENT_OCR_MODEL
               value: {{ .Values.documentPipeline.ocr.model | quote }}
-            {{- end }}
-            {{- if .Values.documentPipeline.ocr.enabled }}
             # OCR escalation tuning (tier-0 triggers; see documentPipeline.ocr.* in
             # values.yaml).
             - name: DOCUMENT_OCR_MIN_TEXT_QUALITY
