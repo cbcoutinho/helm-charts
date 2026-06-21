@@ -546,6 +546,8 @@ both pods stay in lock-step (Deck #183).
               value: {{ .Values.documentPipeline.parseMemLimitMb | quote }}
             - name: DOCUMENT_PDF_GRAPHICS_LIMIT
               value: {{ .Values.documentPipeline.pdfGraphicsLimit | quote }}
+            - name: DOCUMENT_MAX_PDF_SIZE_MB
+              value: {{ .Values.documentPipeline.maxPdfSizeMb | quote }}
             - name: DOCUMENT_OCR_ENABLED
               value: {{ .Values.documentPipeline.ocr.enabled | quote }}
             {{- if .Values.documentPipeline.ocr.enabled }}
@@ -553,6 +555,14 @@ both pods stay in lock-step (Deck #183).
               value: {{ .Values.documentPipeline.ocr.provider | quote }}
             - name: DOCUMENT_OCR_MODEL
               value: {{ .Values.documentPipeline.ocr.model | quote }}
+            - name: DOCUMENT_OCR_TIMEOUT_SECONDS
+              value: {{ .Values.documentPipeline.ocr.timeoutSeconds | quote }}
+            - name: DOCUMENT_OCR_MODE
+              value: {{ .Values.documentPipeline.ocr.mode | quote }}
+            - name: DOCUMENT_OCR_BATCH_POLL_SECONDS
+              value: {{ .Values.documentPipeline.ocr.batchPollSeconds | quote }}
+            - name: DOCUMENT_OCR_BATCH_MAX_WAIT_SECONDS
+              value: {{ .Values.documentPipeline.ocr.batchMaxWaitSeconds | quote }}
             # OCR escalation tuning (tier-0 triggers; see documentPipeline.ocr.* in
             # values.yaml).
             - name: DOCUMENT_OCR_MIN_TEXT_QUALITY

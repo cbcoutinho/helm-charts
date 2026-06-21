@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "title": "nextcloud-mcp-server values",
+  "description": "Scoped schema. Only the documentPipeline block is strictly validated (additionalProperties:false) so consolidated-OCR drift — e.g. the removed ocr.inclusterEnabled/inclusterModel keys — is rejected at lint/template time. All other top-level keys (subcharts, extraEnv, etc.) are intentionally left unconstrained.",
+  "type": "object",
+  "properties": {
+    "documentPipeline": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tier1Engine": {
+          "type": "string",
+          "enum": ["pypdfium2", "pymupdf"]
+        },
+        "classifyEnabled": { "type": "boolean" },
+        "glyphCorruptionRatio": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "parseTimeoutSeconds": { "type": "number", "minimum": 1 },
+        "parseMemLimitMb": { "type": "integer", "minimum": 128 },
+        "pdfGraphicsLimit": { "type": "integer", "minimum": 1 },
+        "maxPdfSizeMb": { "type": "number", "minimum": 0 },
+        "ocr": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "provider": {
+              "type": "string",
+              "enum": ["auto", "gateway", "mistral", "none"]
+            },
+            "model": { "type": "string", "minLength": 1 },
+            "timeoutSeconds": { "type": "number", "minimum": 1 },
+            "mode": {
+              "type": "string",
+              "enum": ["sync", "batch"]
+            },
+            "batchPollSeconds": { "type": "integer", "minimum": 5 },
+            "batchMaxWaitSeconds": { "type": "integer", "minimum": 60 },
+            "minTextQuality": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "pageFraction": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "minPageChars": { "type": "integer", "minimum": 0 },
+            "detectScanned": { "type": "boolean" }
+          }
+        }
+      }
+    }
+  }
+}
