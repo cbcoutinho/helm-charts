@@ -730,6 +730,10 @@ documentPipeline:
   parseMemLimitMb: 1536
   # Max vector graphics per PDF before the parser bails (pymupdf path).
   pdfGraphicsLimit: 1000
+  # Pre-parse size cap (MB): PDFs larger than this fail fast with reason
+  # "oversize" instead of burning the parse/OCR timeout to 0 chars on a
+  # pathological file. 0 disables the guard.
+  maxPdfSizeMb: 50
   # OCR escalation for scanned / no-text-layer PDFs. A single configurable OCR
   # tier: pick the backend (gateway vs direct Mistral) and model below. Off by
   # default; when off the structured tier is terminal.
@@ -759,6 +763,22 @@ documentPipeline:
     # (surya is reached via the gateway — set provider to gateway/auto + supply
     # EMBEDDING_GATEWAY_URL + M2M creds from your private extraEnv overlay).
     model: "mistral/mistral-ocr-latest"
+    # OCR backend request timeout (seconds). Slow scanned newspapers can take
+    # 20-60s; raise/lower per deployment.
+    timeoutSeconds: 180
+    # OCR execution mode: "sync" (default) transcribes inline; "batch" routes to
+    # the gateway's async Batch OCR job (~50% cheaper, minutes-hours latency) for
+    # large-corpus backfill. "batch" REQUIRES a gateway (EMBEDDING_GATEWAY_URL,
+    # supplied via extraEnv) and the procrastinate ingest path — the server
+    # raises at startup otherwise rather than silently downgrading to sync.
+    mode: "sync"
+    # Batch mode only (ignored when mode=sync): seconds between batch-job polls
+    # (the procrastinate re-enqueue delay). Keep well above a few seconds.
+    batchPollSeconds: 120
+    # Batch mode only (ignored when mode=sync): hard deadline (seconds from
+    # submit) after which a still-pending batch job is abandoned and the document
+    # marked parse-failed. Default matches the gateway's 24h Batch timeout.
+    batchMaxWaitSeconds: 86400
     # Escalation tuning — when does a PDF page get sent to OCR instead of the
     # fast text tier. A page is OCR-worthy if it is near-empty
     # (< minPageChars extracted chars) OR its text quality is junk

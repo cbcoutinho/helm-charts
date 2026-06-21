@@ -378,9 +378,18 @@ OCR backend selection is independent of the embedding provider — you can embed
 | `documentPipeline.parseTimeoutSeconds` | Per-PDF parse timeout (seconds) | `120` |
 | `documentPipeline.parseMemLimitMb` | RLIMIT_AS memory cap for the parse subprocess (MB) | `1536` |
 | `documentPipeline.pdfGraphicsLimit` | Max vector graphics per PDF before bailing (pymupdf path) | `1000` |
+| `documentPipeline.maxPdfSizeMb` | Pre-parse size cap (MB); larger PDFs fail fast (`oversize`) instead of burning the timeout; `0` disables | `50` |
 | `documentPipeline.ocr.enabled` | Enable tier-3 OCR for scanned PDFs | `false` |
 | `documentPipeline.ocr.provider` | OCR backend: `auto`, `gateway`, `mistral`, `none` | `auto` |
 | `documentPipeline.ocr.model` | Provider-namespaced OCR model id | `mistral/mistral-ocr-latest` |
+| `documentPipeline.ocr.timeoutSeconds` | OCR backend request timeout (seconds) | `180` |
+| `documentPipeline.ocr.mode` | OCR execution mode: `sync` (inline) or `batch` (async gateway Batch OCR; **requires a gateway**) | `sync` |
+| `documentPipeline.ocr.batchPollSeconds` | Batch mode only: seconds between batch-job polls | `120` |
+| `documentPipeline.ocr.batchMaxWaitSeconds` | Batch mode only: hard deadline (seconds from submit) before a pending batch job is abandoned | `86400` |
+| `documentPipeline.ocr.minTextQuality` | Escalation: text-quality score `[0,1]` below which a page is junk and OCR-worthy | `0.5` |
+| `documentPipeline.ocr.pageFraction` | Escalation: fraction of sampled pages `[0,1]` that must be OCR-worthy before the whole doc escalates | `0.5` |
+| `documentPipeline.ocr.minPageChars` | Escalation: a page with fewer extracted chars than this counts as near-empty | `16` |
+| `documentPipeline.ocr.detectScanned` | Escalation: run raster-image analysis to detect scanned pages (OCR-enabled only) | `true` |
 
 **Enable OCR via Mistral directly:**
 
