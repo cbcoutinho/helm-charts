@@ -548,23 +548,13 @@ both pods stay in lock-step (Deck #183).
               value: {{ .Values.documentPipeline.pdfGraphicsLimit | quote }}
             - name: DOCUMENT_OCR_ENABLED
               value: {{ .Values.documentPipeline.ocr.enabled | quote }}
-            # In-cluster OCR rung (tier2): the on-demand GPU, reached ONLY via the
-            # gateway. Its own opt-in flag, tried before the upstream rung.
-            - name: DOCUMENT_OCR_INCLUSTER_ENABLED
-              value: {{ .Values.documentPipeline.ocr.inclusterEnabled | quote }}
             {{- if .Values.documentPipeline.ocr.enabled }}
             - name: DOCUMENT_OCR_PROVIDER
               value: {{ .Values.documentPipeline.ocr.provider | quote }}
             - name: DOCUMENT_OCR_MODEL
               value: {{ .Values.documentPipeline.ocr.model | quote }}
-            {{- end }}
-            {{- if .Values.documentPipeline.ocr.inclusterEnabled }}
-            - name: DOCUMENT_OCR_INCLUSTER_MODEL
-              value: {{ .Values.documentPipeline.ocr.inclusterModel | quote }}
-            {{- end }}
-            {{- if or .Values.documentPipeline.ocr.enabled .Values.documentPipeline.ocr.inclusterEnabled }}
-            # OCR escalation tuning (tier-0 triggers, shared by both OCR rungs;
-            # see documentPipeline.ocr.* in values.yaml).
+            # OCR escalation tuning (tier-0 triggers; see documentPipeline.ocr.* in
+            # values.yaml).
             - name: DOCUMENT_OCR_MIN_TEXT_QUALITY
               value: {{ .Values.documentPipeline.ocr.minTextQuality | quote }}
             - name: DOCUMENT_OCR_PAGE_FRACTION
