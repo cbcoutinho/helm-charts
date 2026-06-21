@@ -14,6 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable resource limits
 - Grafana dashboard annotations
 
+## nextcloud-mcp-server-0.87.5 (2026-06-21)
+
+### Refactor
+
+- **nextcloud-mcp-server**: merge duplicate OCR env if-blocks (PR #80 round-1)
+- **nextcloud-mcp-server**: consolidate OCR into a single configurable tier
+
 ## nextcloud-mcp-server-0.87.4 (2026-06-21)
 
 ## nextcloud-mcp-server-0.87.3 (2026-06-21)
