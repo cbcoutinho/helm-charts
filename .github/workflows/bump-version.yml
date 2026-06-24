@@ -5,6 +5,13 @@ on:
     branches:
       - main
 
+# Serialize bump runs so only one executes at a time. Queue (do not cancel)
+# in-progress runs, since cancelling mid-bump could leave commits/tags in a
+# partially pushed state.
+concurrency:
+  group: bump-version
+  cancel-in-progress: false
+
 jobs:
   bump-version:
     if: "!startsWith(github.event.head_commit.message, 'bump:')"
