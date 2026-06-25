@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable resource limits
 - Grafana dashboard annotations
 
+## nextcloud-mcp-server-0.88.8 (2026-06-25)
+
 ## nextcloud-mcp-server-0.88.7 (2026-06-24)
 
 ## nextcloud-mcp-server-0.88.6 (2026-06-23)
