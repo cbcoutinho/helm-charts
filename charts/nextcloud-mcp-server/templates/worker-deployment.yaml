@@ -63,6 +63,9 @@ spec:
     metadata:
       annotations:
         checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") $ | sha256sum }}
+        {{- if $.Values.settings.content }}
+        checksum/configmap-settings: {{ include (print $.Template.BasePath "/settings-configmap.yaml") $ | sha256sum }}
+        {{- end }}
         {{- with $.Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -143,6 +146,9 @@ spec:
               subPath: {{ $.Values.database.caBundleSecret.key | quote }}
               readOnly: true
             {{- end }}
+            {{- if $.Values.settings.content }}
+            {{- include "nextcloud-mcp-server.settingsVolumeMount" $ | nindent 12 }}
+            {{- end }}
             {{- with $.Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
@@ -160,6 +166,9 @@ spec:
             items:
               - key: {{ $.Values.database.caBundleSecret.key | quote }}
                 path: {{ $.Values.database.caBundleSecret.key | quote }}
+        {{- end }}
+        {{- if $.Values.settings.content }}
+        {{- include "nextcloud-mcp-server.settingsVolume" $ | nindent 8 }}
         {{- end }}
         {{- with $.Values.volumes }}
         {{- toYaml . | nindent 8 }}

@@ -289,12 +289,38 @@ If not specified:
 {{- end }}
 
 {{/*
+Settings volume + mount for the optional dynaconf settings.toml ConfigMap
+(.Values.settings.content). Guard at the call site with
+`if .Values.settings.content` so nothing renders when unset.
+*/}}
+{{- define "nextcloud-mcp-server.settingsVolume" -}}
+- name: app-settings
+  configMap:
+    name: {{ include "nextcloud-mcp-server.fullname" . }}-settings
+{{- end -}}
+
+{{- define "nextcloud-mcp-server.settingsVolumeMount" -}}
+- name: app-settings
+  # subPath mounts only the settings.toml file, so it does NOT shadow anything
+  # else at mountPath. subPath mounts don't get live ConfigMap updates, but the
+  # checksum/configmap-settings pod annotation rolls the pods on change anyway.
+  mountPath: {{ printf "%s/settings.toml" (.Values.settings.mountPath | trimSuffix "/") }}
+  subPath: settings.toml
+  readOnly: true
+{{- end -}}
+
+{{/*
 Shared container env for the API Deployment and the ingest worker Deployment.
 Both roles get the identical env; INGEST_QUEUE and MCP_ROLE are layered on
 per-Deployment by the caller. Extracted verbatim from the API deployment so
 both pods stay in lock-step (Deck #183).
 */}}
 {{- define "nextcloud-mcp-server.containerEnv" }}
+            {{- if .Values.settings.content }}
+            # dynaconf settings.toml (NON-SECRET — ConfigMap); env vars override.
+            - name: NEXTCLOUD_MCP_SETTINGS_FILE
+              value: {{ printf "%s/settings.toml" (.Values.settings.mountPath | trimSuffix "/") | quote }}
+            {{- end }}
             # Nextcloud connection
             - name: NEXTCLOUD_HOST
               value: {{ .Values.nextcloud.host | quote }}
