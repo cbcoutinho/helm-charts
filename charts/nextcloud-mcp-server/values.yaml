@@ -281,6 +281,11 @@ database:
   # "true" → full cert verification (sslmode=verify-full). "false" →
   # encrypt without verifying (sslmode=require; homelab / self-signed).
   # Prefer caBundle over "false" for production.
+  #
+  # Accepts ONLY "true" / "false" / "" — it is rendered as a bare TOML bool in the
+  # generated settings.toml (DATABASE_VERIFY_SSL), so any other string would be
+  # invalid TOML. Empty (default) is omitted, preserving the app's None/prefer
+  # behaviour.
   verifySsl: ""
 
   # Path *inside the container* to a PEM file containing a private CA.
@@ -522,29 +527,19 @@ autoscaling:
   targetCPUUtilizationPercentage: 80
   # targetMemoryUtilizationPercentage: 80
 
-# Optional application settings file (dynaconf `settings.toml`). Holds shared,
-# NON-SECRET configuration that should be file-driven rather than env-driven.
-# When `content` is non-empty the chart renders a `<fullname>-settings` ConfigMap,
-# mounts it read-only at `mountPath` on BOTH the api and ingest-worker pods, and
-# sets NEXTCLOUD_MCP_SETTINGS_FILE to `<mountPath>/settings.toml`.
-#
-# dynaconf precedence is env var > settings.toml > app defaults, so any value here
-# is still overridable per-deployment via env / extraEnv. The app runs dynaconf in
-# environments mode (env_switcher MCP_DEPLOYMENT_MODE), so write a `[default]`
-# section (plus optional `[<env>]` sections). Put SECRETS in env / Secret refs,
-# never here — this lands in a plaintext ConfigMap.
+# Application settings (dynaconf `settings.toml`). The chart ALWAYS generates a
+# settings.toml from the non-secret config values (templates/_settings.tpl),
+# renders a `<fullname>-settings` ConfigMap, mounts it read-only at `mountPath` on
+# BOTH the api and ingest-worker pods, and sets NEXTCLOUD_MCP_SETTINGS_FILE — so
+# non-secret config is file-driven and only secrets + per-pod/auth-coupled vars
+# are injected as env. dynaconf precedence is env var > settings.toml > app
+# defaults, so env/extraEnv still overrides anything in the file. SECRETS must NOT
+# go here — this lands in a plaintext ConfigMap.
 settings:
-  # The chart always GENERATES a dynaconf settings.toml from the non-secret
-  # config values (templates/_settings.tpl), mounts it read-only on both the api
-  # and ingest-worker pods, and sets NEXTCLOUD_MCP_SETTINGS_FILE — so non-secret
-  # config is file-driven and only secrets + per-pod/auth-coupled vars are
-  # injected as env. dynaconf precedence is env var > settings.toml > app
-  # defaults, so env/extraEnv still overrides anything in the file.
-  #
-  # Raw TOML appended verbatim after the generated body (escape-hatch for keys
-  # the chart doesn't model). Example:
+  # Raw TOML appended verbatim after the generated [default] body (escape-hatch
+  # for keys the chart doesn't model). It is already inside [default], so add
+  # bare keys:
   #   content: |
-  #     [default]
   #     SOME_UNMODELLED_KEY = "x"
   content: ""
   mountPath: /config

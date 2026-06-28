@@ -31,7 +31,11 @@ NEXTCLOUD_CA_BUNDLE = {{ . | quote }}
 DATABASE_VERIFY_SSL = {{ .Values.database.verifySsl }}
 {{- end }}
 {{- if or .Values.database.caBundle .Values.database.caBundleSecret.name }}
-DATABASE_CA_BUNDLE = {{ if .Values.database.caBundleSecret.name }}{{ .Values.database.caBundleSecret.mountPath | quote }}{{ else }}{{ .Values.database.caBundle | quote }}{{ end }}
+{{- if .Values.database.caBundleSecret.name }}
+DATABASE_CA_BUNDLE = {{ .Values.database.caBundleSecret.mountPath | quote }}
+{{- else }}
+DATABASE_CA_BUNDLE = {{ .Values.database.caBundle | quote }}
+{{- end }}
 {{- end }}
 {{- if .Values.database.poolSize }}
 DATABASE_POOL_SIZE = {{ .Values.database.poolSize }}
@@ -39,8 +43,11 @@ DATABASE_POOL_SIZE = {{ .Values.database.poolSize }}
 {{- if (or (eq (toString .Values.database.maxOverflow) "0") .Values.database.maxOverflow) }}
 DATABASE_MAX_OVERFLOW = {{ .Values.database.maxOverflow }}
 {{- end }}
-# Ingest worker (Deck #424): poll-only when behind a transaction-mode pooler
+{{- if .Values.ingest.splitWorker }}
+# Ingest worker (Deck #424): poll-only when behind a transaction-mode pooler.
+# Only meaningful with the split worker (in-process/memory mode ignores it).
 INGEST_LISTEN_NOTIFY = {{ .Values.ingest.listenNotify }}
+{{- end }}
 # Document chunking (always; used by the vector-sync processor)
 DOCUMENT_CHUNK_SIZE = {{ .Values.documentChunking.chunkSize }}
 DOCUMENT_CHUNK_OVERLAP = {{ .Values.documentChunking.chunkOverlap }}
@@ -91,6 +98,6 @@ LOG_INCLUDE_TRACE_CONTEXT = {{ .Values.observability.logging.includeTraceContext
 {{- with .Values.settings.content }}
 
 # --- operator-supplied extra settings (.Values.settings.content) ---
-{{ . }}
+{{ . | trim }}
 {{- end }}
 {{- end -}}
