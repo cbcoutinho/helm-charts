@@ -2,7 +2,7 @@ apiVersion: v2
 name: nextcloud-mcp-server
 description: A Helm chart for deploying Nextcloud MCP Server - enables AI assistants to interact with Nextcloud
 type: application
-version: 0.90.0
+version: 0.90.1
 appVersion: "0.126.5"
 # policy/v1 (PodDisruptionBudget) was promoted in Kubernetes 1.21.
 kubeVersion: ">=1.21.0-0"
@@ -29,16 +29,8 @@ annotations:
   grafana_dashboard: "true"
   grafana_dashboard_folder: "Nextcloud MCP"
   artifacthub.io/changes: |
-    - kind: changed
-      description: "note nextcloud.verifySsl must be a bare bool, not a string (review r3)"
-    - kind: changed
-      description: "fix stale settingsVolume comment + clarify db guards (review r2)"
     - kind: fixed
-      description: "address review on settings.toml generator"
-    - kind: added
-      description: "always generate settings.toml; move non-secret config out of env"
-    - kind: added
-      description: "generate non-secret config into settings.toml (WIP: generator)"
+      description: "bump appVersion to 0.126.5"
 dependencies:
   - name: qdrant
     version: "1.18.2"
