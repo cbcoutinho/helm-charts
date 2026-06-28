@@ -313,13 +313,9 @@ both pods stay in lock-step (Deck #183).
 */}}
 {{- define "nextcloud-mcp-server.containerEnv" }}
             {{- if .Values.settings.content }}
-            # File-driven app config (dynaconf settings.toml), mounted from the
-            # <fullname>-settings ConfigMap. Holds shared, NON-SECRET config; the
-            # env vars in this block still override it (dynaconf precedence:
-            # env var > settings.toml > app defaults). Secrets belong in env /
-            # Secret refs, never in this file.
+            # dynaconf settings.toml (NON-SECRET — ConfigMap); env vars override.
             - name: NEXTCLOUD_MCP_SETTINGS_FILE
-              value: {{ printf "%s/settings.toml" .Values.settings.mountPath | quote }}
+              value: {{ printf "%s/settings.toml" (.Values.settings.mountPath | trimSuffix "/") | quote }}
             {{- end }}
             # Nextcloud connection
             - name: NEXTCLOUD_HOST
