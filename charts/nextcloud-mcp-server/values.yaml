@@ -41,6 +41,9 @@ nextcloud:
 
   # Verify TLS certificates when connecting to Nextcloud (NEXTCLOUD_VERIFY_SSL).
   # Set to false only for self-signed certs in trusted networks.
+  # Must be a bare YAML bool (true/false), NOT a quoted string — a quoted "false"
+  # is truthy in Go templates and would silently leave NEXTCLOUD_VERIFY_SSL unset
+  # (app default: verify). (Note database.verifySsl is the opposite — a string.)
   verifySsl: true
   # In-container path to a PEM CA bundle for a private CA (NEXTCLOUD_CA_BUNDLE).
   # The chart only sets the env var — mount the file yourself via the top-level
