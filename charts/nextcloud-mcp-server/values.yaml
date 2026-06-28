@@ -41,6 +41,9 @@ nextcloud:
 
   # Verify TLS certificates when connecting to Nextcloud (NEXTCLOUD_VERIFY_SSL).
   # Set to false only for self-signed certs in trusted networks.
+  # Must be a bare YAML bool (true/false), NOT a quoted string — a quoted "false"
+  # is truthy in Go templates and would silently leave NEXTCLOUD_VERIFY_SSL unset
+  # (app default: verify). (Note database.verifySsl is the opposite — a string.)
   verifySsl: true
   # In-container path to a PEM CA bundle for a private CA (NEXTCLOUD_CA_BUNDLE).
   # The chart only sets the env var — mount the file yourself via the top-level
@@ -281,6 +284,11 @@ database:
   # "true" → full cert verification (sslmode=verify-full). "false" →
   # encrypt without verifying (sslmode=require; homelab / self-signed).
   # Prefer caBundle over "false" for production.
+  #
+  # Accepts ONLY "true" / "false" / "" — it is rendered as a bare TOML bool in the
+  # generated settings.toml (DATABASE_VERIFY_SSL), so any other string would be
+  # invalid TOML. Empty (default) is omitted, preserving the app's None/prefer
+  # behaviour.
   verifySsl: ""
 
   # Path *inside the container* to a PEM file containing a private CA.
@@ -522,24 +530,20 @@ autoscaling:
   targetCPUUtilizationPercentage: 80
   # targetMemoryUtilizationPercentage: 80
 
-# Optional application settings file (dynaconf `settings.toml`). Holds shared,
-# NON-SECRET configuration that should be file-driven rather than env-driven.
-# When `content` is non-empty the chart renders a `<fullname>-settings` ConfigMap,
-# mounts it read-only at `mountPath` on BOTH the api and ingest-worker pods, and
-# sets NEXTCLOUD_MCP_SETTINGS_FILE to `<mountPath>/settings.toml`.
-#
-# dynaconf precedence is env var > settings.toml > app defaults, so any value here
-# is still overridable per-deployment via env / extraEnv. The app runs dynaconf in
-# environments mode (env_switcher MCP_DEPLOYMENT_MODE), so write a `[default]`
-# section (plus optional `[<env>]` sections). Put SECRETS in env / Secret refs,
-# never here — this lands in a plaintext ConfigMap.
+# Application settings (dynaconf `settings.toml`). The chart ALWAYS generates a
+# settings.toml from the non-secret config values (templates/_settings.tpl),
+# renders a `<fullname>-settings` ConfigMap, mounts it read-only at `mountPath` on
+# BOTH the api and ingest-worker pods, and sets NEXTCLOUD_MCP_SETTINGS_FILE — so
+# non-secret config is file-driven and only secrets + per-pod/auth-coupled vars
+# are injected as env. dynaconf precedence is env var > settings.toml > app
+# defaults, so env/extraEnv still overrides anything in the file. SECRETS must NOT
+# go here — this lands in a plaintext ConfigMap.
 settings:
-  # Raw TOML written verbatim into the ConfigMap's settings.toml key. Empty
-  # (default) → no ConfigMap, no mount, NEXTCLOUD_MCP_SETTINGS_FILE unset.
-  # Example:
+  # Raw TOML appended verbatim after the generated [default] body (escape-hatch
+  # for keys the chart doesn't model). It is already inside [default], so add
+  # bare keys:
   #   content: |
-  #     [default]
-  #     ingest_listen_notify = false
+  #     SOME_UNMODELLED_KEY = "x"
   content: ""
   mountPath: /config
 
@@ -651,6 +655,11 @@ ingest:
   # Split ingest into a procrastinate Postgres queue + worker Deployment.
   # Leave false to keep document processing in-process (anyio task groups).
   splitWorker: false
+  # LISTEN/NOTIFY for near-instant job pickup (app default). Set false to run the
+  # worker poll-only when DATABASE_URL routes through a transaction-mode pooler
+  # (PgBouncer), which drops the LISTEN registration on backend checkin. Emitted
+  # into the generated settings.toml (INGEST_LISTEN_NOTIFY).
+  listenNotify: true
   # Settings for the worker Deployment (only rendered when splitWorker=true).
   worker:
     # Static replica count. For scale-to-zero on queue depth, apply a KEDA

@@ -1,12 +1,12 @@
-{{- if .Values.settings.content }}
 {{/*
-Optional dynaconf settings.toml for the MCP server (api + ingest-worker pods).
-Holds shared, NON-SECRET configuration the operator wants file-driven rather than
-env-driven. dynaconf precedence is env var > settings.toml > app defaults, so env
-vars still override anything here. Mounted read-only at .Values.settings.mountPath
-and selected via NEXTCLOUD_MCP_SETTINGS_FILE (set in the containerEnv helper).
-The app runs dynaconf in environments mode (env_switcher MCP_DEPLOYMENT_MODE), so
-the content should use a [default] section (plus optional [<env>] sections).
+Generated dynaconf settings.toml for the MCP server (api + ingest-worker pods).
+Holds the NON-SECRET, dataclass-backed config that would otherwise be injected as
+env (templates/_settings.tpl), plus any operator-supplied .Values.settings.content
+appended verbatim. dynaconf precedence is env var > settings.toml > app defaults,
+so env/extraEnv still overrides anything here. Mounted read-only at
+.Values.settings.mountPath and selected via NEXTCLOUD_MCP_SETTINGS_FILE (set in the
+containerEnv helper). The app runs dynaconf in environments mode (env_switcher
+MCP_DEPLOYMENT_MODE); the generated body uses a [default] section.
 */}}
 apiVersion: v1
 kind: ConfigMap
@@ -18,5 +18,4 @@ data:
   # `indent 4` (NOT nindent) is intentional — nindent prepends a newline, which
   # would leave a leading blank line in the mounted settings.toml.
   settings.toml: |
-{{ .Values.settings.content | indent 4 }}
-{{- end }}
+{{ include "nextcloud-mcp-server.generatedSettings" . | indent 4 }}
