@@ -289,9 +289,9 @@ If not specified:
 {{- end }}
 
 {{/*
-Settings volume + mount for the optional dynaconf settings.toml ConfigMap
-(.Values.settings.content). Guard at the call site with
-`if .Values.settings.content` so nothing renders when unset.
+Settings volume + mount for the generated dynaconf settings.toml ConfigMap.
+Always rendered unconditionally (no call-site guard) — the ConfigMap always
+exists and both the api and ingest-worker pods always mount it.
 */}}
 {{- define "nextcloud-mcp-server.settingsVolume" -}}
 - name: app-settings
