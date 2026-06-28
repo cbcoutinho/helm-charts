@@ -2,7 +2,7 @@ apiVersion: v2
 name: nextcloud-mcp-server
 description: A Helm chart for deploying Nextcloud MCP Server - enables AI assistants to interact with Nextcloud
 type: application
-version: 0.88.11
+version: 0.89.0
 appVersion: "0.126.3"
 # policy/v1 (PodDisruptionBudget) was promoted in Kubernetes 1.21.
 kubeVersion: ">=1.21.0-0"
@@ -29,10 +29,16 @@ annotations:
   grafana_dashboard: "true"
   grafana_dashboard_folder: "Nextcloud MCP"
   artifacthub.io/changes: |
-    - kind: changed
-      description: "update helm release ollama to v1.64.0"
-    - kind: changed
-      description: "update anthropics/claude-code-action action to v1.0.159"
+    - kind: fixed
+      description: "mount settings.toml via subPath to avoid shadowing mountPath dir (review)"
+    - kind: fixed
+      description: "trimSuffix settings mountPath in volumeMount + note indent intent (review)"
+    - kind: fixed
+      description: "trim trailing slash on settings mountPath + tighten comment (review)"
+    - kind: fixed
+      description: "roll pods on settings.toml change + tidy template (review)"
+    - kind: added
+      description: "mount a dynaconf settings.toml ConfigMap for shared app config"
 dependencies:
   - name: qdrant
     version: "1.18.2"

@@ -14,6 +14,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable resource limits
 - Grafana dashboard annotations
 
+## nextcloud-mcp-server-0.89.0 (2026-06-28)
+
+### Feat
+
+- **helm**: mount a dynaconf settings.toml ConfigMap for shared app config
+
+### Fix
+
+- **helm**: mount settings.toml via subPath to avoid shadowing mountPath dir (review)
+- **helm**: trimSuffix settings mountPath in volumeMount + note indent intent (review)
+- **helm**: trim trailing slash on settings mountPath + tighten comment (review)
+- **helm**: roll pods on settings.toml change + tidy template (review)
+
 ## nextcloud-mcp-server-0.88.11 (2026-06-28)
 
 ## nextcloud-mcp-server-0.88.10 (2026-06-27)
