@@ -534,12 +534,18 @@ autoscaling:
 # section (plus optional `[<env>]` sections). Put SECRETS in env / Secret refs,
 # never here — this lands in a plaintext ConfigMap.
 settings:
-  # Raw TOML written verbatim into the ConfigMap's settings.toml key. Empty
-  # (default) → no ConfigMap, no mount, NEXTCLOUD_MCP_SETTINGS_FILE unset.
-  # Example:
+  # When true (default) the chart GENERATES a dynaconf settings.toml from the
+  # non-secret config values (templates/_settings.tpl), mounts it read-only, and
+  # sets NEXTCLOUD_MCP_SETTINGS_FILE — so non-secret config is file-driven and
+  # only secrets + per-pod/auth-coupled vars are injected as env. Set false to
+  # fall back to pure env injection (no ConfigMap/mount). dynaconf precedence is
+  # env var > settings.toml > app defaults, so env/extraEnv still overrides.
+  generate: true
+  # Raw TOML appended verbatim after the generated body (escape-hatch for keys
+  # the chart doesn't model). Example:
   #   content: |
   #     [default]
-  #     ingest_listen_notify = false
+  #     SOME_UNMODELLED_KEY = "x"
   content: ""
   mountPath: /config
 
@@ -651,6 +657,11 @@ ingest:
   # Split ingest into a procrastinate Postgres queue + worker Deployment.
   # Leave false to keep document processing in-process (anyio task groups).
   splitWorker: false
+  # LISTEN/NOTIFY for near-instant job pickup (app default). Set false to run the
+  # worker poll-only when DATABASE_URL routes through a transaction-mode pooler
+  # (PgBouncer), which drops the LISTEN registration on backend checkin. Emitted
+  # into the generated settings.toml (INGEST_LISTEN_NOTIFY).
+  listenNotify: true
   # Settings for the worker Deployment (only rendered when splitWorker=true).
   worker:
     # Static replica count. For scale-to-zero on queue depth, apply a KEDA
