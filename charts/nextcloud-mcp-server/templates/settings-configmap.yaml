@@ -15,6 +15,8 @@ metadata:
   labels:
     {{- include "nextcloud-mcp-server.labels" . | nindent 4 }}
 data:
+  # `indent 4` (NOT nindent) is intentional — nindent prepends a newline, which
+  # would leave a leading blank line in the mounted settings.toml.
   settings.toml: |
 {{ .Values.settings.content | indent 4 }}
 {{- end }}

@@ -301,7 +301,7 @@ Settings volume + mount for the optional dynaconf settings.toml ConfigMap
 
 {{- define "nextcloud-mcp-server.settingsVolumeMount" -}}
 - name: app-settings
-  mountPath: {{ .Values.settings.mountPath }}
+  mountPath: {{ .Values.settings.mountPath | trimSuffix "/" }}
   readOnly: true
 {{- end -}}
 
