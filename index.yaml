@@ -3,6 +3,59 @@ entries:
   nextcloud-mcp-server:
   - annotations:
       artifacthub.io/changes: |
+        - kind: changed
+          description: "note nextcloud.verifySsl must be a bare bool, not a string (review r3)"
+        - kind: changed
+          description: "fix stale settingsVolume comment + clarify db guards (review r2)"
+        - kind: fixed
+          description: "address review on settings.toml generator"
+        - kind: added
+          description: "always generate settings.toml; move non-secret config out of env"
+        - kind: added
+          description: "generate non-secret config into settings.toml (WIP: generator)"
+      grafana_dashboard: "true"
+      grafana_dashboard_folder: Nextcloud MCP
+    apiVersion: v2
+    appVersion: 0.126.3
+    created: "2026-06-28T15:26:50.299621084Z"
+    dependencies:
+    - condition: qdrant.networkMode.deploySubchart
+      name: qdrant
+      repository: https://qdrant.github.io/qdrant-helm
+      version: 1.18.2
+    - condition: ollama.enabled
+      name: ollama
+      repository: https://otwld.github.io/ollama-helm
+      version: 1.64.0
+    description: A Helm chart for deploying Nextcloud MCP Server - enables AI assistants
+      to interact with Nextcloud
+    digest: 1097e3f32b2989455fefa47e14a5116e2ba3cec62bf5f97e9c2b861399bc3049
+    home: https://github.com/cbcoutinho/nextcloud-mcp-server
+    icon: https://raw.githubusercontent.com/nextcloud/server/master/core/img/logo/logo.svg
+    keywords:
+    - nextcloud
+    - mcp
+    - model-context-protocol
+    - llm
+    - ai
+    - claude
+    - webdav
+    - caldav
+    - carddav
+    - helm
+    kubeVersion: '>=1.21.0-0'
+    maintainers:
+    - email: chris@coutinho.io
+      name: Chris Coutinho
+    name: nextcloud-mcp-server
+    sources:
+    - https://github.com/cbcoutinho/nextcloud-mcp-server
+    type: application
+    urls:
+    - https://github.com/cbcoutinho/helm-charts/releases/download/nextcloud-mcp-server-0.90.0/nextcloud-mcp-server-0.90.0.tgz
+    version: 0.90.0
+  - annotations:
+      artifacthub.io/changes: |
         - kind: fixed
           description: "mount settings.toml via subPath to avoid shadowing mountPath dir (review)"
         - kind: fixed
@@ -3909,4 +3962,4 @@ entries:
     urls:
     - https://github.com/cbcoutinho/helm-charts/releases/download/nextcloud-mcp-server-0.59.1/nextcloud-mcp-server-0.59.1.tgz
     version: 0.59.1
-generated: "2026-06-28T15:00:05.104217364Z"
+generated: "2026-06-28T15:26:50.299996674Z"
