@@ -16,5 +16,5 @@ metadata:
     {{- include "nextcloud-mcp-server.labels" . | nindent 4 }}
 data:
   settings.toml: |
-    {{- .Values.settings.content | nindent 4 }}
+{{ .Values.settings.content | indent 4 }}
 {{- end }}

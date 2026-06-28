@@ -289,12 +289,6 @@ If not specified:
 {{- end }}
 
 {{/*
-Shared container env for the API Deployment and the ingest worker Deployment.
-Both roles get the identical env; INGEST_QUEUE and MCP_ROLE are layered on
-per-Deployment by the caller. Extracted verbatim from the API deployment so
-both pods stay in lock-step (Deck #183).
-*/}}
-{{/*
 Settings volume + mount for the optional dynaconf settings.toml ConfigMap
 (.Values.settings.content). Guard at the call site with
 `if .Values.settings.content` so nothing renders when unset.
@@ -311,6 +305,12 @@ Settings volume + mount for the optional dynaconf settings.toml ConfigMap
   readOnly: true
 {{- end -}}
 
+{{/*
+Shared container env for the API Deployment and the ingest worker Deployment.
+Both roles get the identical env; INGEST_QUEUE and MCP_ROLE are layered on
+per-Deployment by the caller. Extracted verbatim from the API deployment so
+both pods stay in lock-step (Deck #183).
+*/}}
 {{- define "nextcloud-mcp-server.containerEnv" }}
             {{- if .Values.settings.content }}
             # File-driven app config (dynaconf settings.toml), mounted from the
