@@ -294,7 +294,33 @@ Both roles get the identical env; INGEST_QUEUE and MCP_ROLE are layered on
 per-Deployment by the caller. Extracted verbatim from the API deployment so
 both pods stay in lock-step (Deck #183).
 */}}
+{{/*
+Settings volume + mount for the optional dynaconf settings.toml ConfigMap
+(.Values.settings.content). Guard at the call site with
+`if .Values.settings.content` so nothing renders when unset.
+*/}}
+{{- define "nextcloud-mcp-server.settingsVolume" -}}
+- name: app-settings
+  configMap:
+    name: {{ include "nextcloud-mcp-server.fullname" . }}-settings
+{{- end -}}
+
+{{- define "nextcloud-mcp-server.settingsVolumeMount" -}}
+- name: app-settings
+  mountPath: {{ .Values.settings.mountPath }}
+  readOnly: true
+{{- end -}}
+
 {{- define "nextcloud-mcp-server.containerEnv" }}
+            {{- if .Values.settings.content }}
+            # File-driven app config (dynaconf settings.toml), mounted from the
+            # <fullname>-settings ConfigMap. Holds shared, NON-SECRET config; the
+            # env vars in this block still override it (dynaconf precedence:
+            # env var > settings.toml > app defaults). Secrets belong in env /
+            # Secret refs, never in this file.
+            - name: NEXTCLOUD_MCP_SETTINGS_FILE
+              value: {{ printf "%s/settings.toml" .Values.settings.mountPath | quote }}
+            {{- end }}
             # Nextcloud connection
             - name: NEXTCLOUD_HOST
               value: {{ .Values.nextcloud.host | quote }}

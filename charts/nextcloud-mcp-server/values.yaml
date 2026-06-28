@@ -522,6 +522,27 @@ autoscaling:
   targetCPUUtilizationPercentage: 80
   # targetMemoryUtilizationPercentage: 80
 
+# Optional application settings file (dynaconf `settings.toml`). Holds shared,
+# NON-SECRET configuration that should be file-driven rather than env-driven.
+# When `content` is non-empty the chart renders a `<fullname>-settings` ConfigMap,
+# mounts it read-only at `mountPath` on BOTH the api and ingest-worker pods, and
+# sets NEXTCLOUD_MCP_SETTINGS_FILE to `<mountPath>/settings.toml`.
+#
+# dynaconf precedence is env var > settings.toml > app defaults, so any value here
+# is still overridable per-deployment via env / extraEnv. The app runs dynaconf in
+# environments mode (env_switcher MCP_DEPLOYMENT_MODE), so write a `[default]`
+# section (plus optional `[<env>]` sections). Put SECRETS in env / Secret refs,
+# never here — this lands in a plaintext ConfigMap.
+settings:
+  # Raw TOML written verbatim into the ConfigMap's settings.toml key. Empty
+  # (default) → no ConfigMap, no mount, NEXTCLOUD_MCP_SETTINGS_FILE unset.
+  # Example:
+  #   content: |
+  #     [default]
+  #     ingest_listen_notify = false
+  content: ""
+  mountPath: /config
+
 # Additional volumes on the output Deployment definition.
 volumes: []
 # - name: foo

@@ -1,0 +1,20 @@
+{{- if .Values.settings.content }}
+{{/*
+Optional dynaconf settings.toml for the MCP server (api + ingest-worker pods).
+Holds shared, NON-SECRET configuration the operator wants file-driven rather than
+env-driven. dynaconf precedence is env var > settings.toml > app defaults, so env
+vars still override anything here. Mounted read-only at .Values.settings.mountPath
+and selected via NEXTCLOUD_MCP_SETTINGS_FILE (set in the containerEnv helper).
+The app runs dynaconf in environments mode (env_switcher MCP_DEPLOYMENT_MODE), so
+the content should use a [default] section (plus optional [<env>] sections).
+*/}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "nextcloud-mcp-server.fullname" . }}-settings
+  labels:
+    {{- include "nextcloud-mcp-server.labels" . | nindent 4 }}
+data:
+  settings.toml: |
+    {{- .Values.settings.content | nindent 4 }}
+{{- end }}
