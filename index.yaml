@@ -3,6 +3,59 @@ entries:
   nextcloud-mcp-server:
   - annotations:
       artifacthub.io/changes: |
+        - kind: fixed
+          description: "mount settings.toml via subPath to avoid shadowing mountPath dir (review)"
+        - kind: fixed
+          description: "trimSuffix settings mountPath in volumeMount + note indent intent (review)"
+        - kind: fixed
+          description: "trim trailing slash on settings mountPath + tighten comment (review)"
+        - kind: fixed
+          description: "roll pods on settings.toml change + tidy template (review)"
+        - kind: added
+          description: "mount a dynaconf settings.toml ConfigMap for shared app config"
+      grafana_dashboard: "true"
+      grafana_dashboard_folder: Nextcloud MCP
+    apiVersion: v2
+    appVersion: 0.126.3
+    created: "2026-06-28T15:00:05.103881467Z"
+    dependencies:
+    - condition: qdrant.networkMode.deploySubchart
+      name: qdrant
+      repository: https://qdrant.github.io/qdrant-helm
+      version: 1.18.2
+    - condition: ollama.enabled
+      name: ollama
+      repository: https://otwld.github.io/ollama-helm
+      version: 1.64.0
+    description: A Helm chart for deploying Nextcloud MCP Server - enables AI assistants
+      to interact with Nextcloud
+    digest: 25bf595855ff00aca6f2a785df0ca5a3a49d9c24235ed264d0b1e9084c5ef35b
+    home: https://github.com/cbcoutinho/nextcloud-mcp-server
+    icon: https://raw.githubusercontent.com/nextcloud/server/master/core/img/logo/logo.svg
+    keywords:
+    - nextcloud
+    - mcp
+    - model-context-protocol
+    - llm
+    - ai
+    - claude
+    - webdav
+    - caldav
+    - carddav
+    - helm
+    kubeVersion: '>=1.21.0-0'
+    maintainers:
+    - email: chris@coutinho.io
+      name: Chris Coutinho
+    name: nextcloud-mcp-server
+    sources:
+    - https://github.com/cbcoutinho/nextcloud-mcp-server
+    type: application
+    urls:
+    - https://github.com/cbcoutinho/helm-charts/releases/download/nextcloud-mcp-server-0.89.0/nextcloud-mcp-server-0.89.0.tgz
+    version: 0.89.0
+  - annotations:
+      artifacthub.io/changes: |
         - kind: changed
           description: "update helm release ollama to v1.64.0"
         - kind: changed
@@ -3856,4 +3909,4 @@ entries:
     urls:
     - https://github.com/cbcoutinho/helm-charts/releases/download/nextcloud-mcp-server-0.59.1/nextcloud-mcp-server-0.59.1.tgz
     version: 0.59.1
-generated: "2026-06-28T12:01:34.76747554Z"
+generated: "2026-06-28T15:00:05.104217364Z"
