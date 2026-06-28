@@ -301,7 +301,11 @@ Settings volume + mount for the optional dynaconf settings.toml ConfigMap
 
 {{- define "nextcloud-mcp-server.settingsVolumeMount" -}}
 - name: app-settings
-  mountPath: {{ .Values.settings.mountPath | trimSuffix "/" }}
+  # subPath mounts only the settings.toml file, so it does NOT shadow anything
+  # else at mountPath. subPath mounts don't get live ConfigMap updates, but the
+  # checksum/configmap-settings pod annotation rolls the pods on change anyway.
+  mountPath: {{ printf "%s/settings.toml" (.Values.settings.mountPath | trimSuffix "/") }}
+  subPath: settings.toml
   readOnly: true
 {{- end -}}
 
