@@ -534,13 +534,13 @@ autoscaling:
 # section (plus optional `[<env>]` sections). Put SECRETS in env / Secret refs,
 # never here — this lands in a plaintext ConfigMap.
 settings:
-  # When true (default) the chart GENERATES a dynaconf settings.toml from the
-  # non-secret config values (templates/_settings.tpl), mounts it read-only, and
-  # sets NEXTCLOUD_MCP_SETTINGS_FILE — so non-secret config is file-driven and
-  # only secrets + per-pod/auth-coupled vars are injected as env. Set false to
-  # fall back to pure env injection (no ConfigMap/mount). dynaconf precedence is
-  # env var > settings.toml > app defaults, so env/extraEnv still overrides.
-  generate: true
+  # The chart always GENERATES a dynaconf settings.toml from the non-secret
+  # config values (templates/_settings.tpl), mounts it read-only on both the api
+  # and ingest-worker pods, and sets NEXTCLOUD_MCP_SETTINGS_FILE — so non-secret
+  # config is file-driven and only secrets + per-pod/auth-coupled vars are
+  # injected as env. dynaconf precedence is env var > settings.toml > app
+  # defaults, so env/extraEnv still overrides anything in the file.
+  #
   # Raw TOML appended verbatim after the generated body (escape-hatch for keys
   # the chart doesn't model). Example:
   #   content: |

@@ -1,4 +1,3 @@
-{{- if .Values.settings.generate }}
 {{/*
 Generated dynaconf settings.toml for the MCP server (api + ingest-worker pods).
 Holds the NON-SECRET, dataclass-backed config that would otherwise be injected as
@@ -20,4 +19,3 @@ data:
   # would leave a leading blank line in the mounted settings.toml.
   settings.toml: |
 {{ include "nextcloud-mcp-server.generatedSettings" . | indent 4 }}
-{{- end }}

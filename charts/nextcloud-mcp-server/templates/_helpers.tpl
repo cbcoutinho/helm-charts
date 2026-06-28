@@ -316,27 +316,14 @@ per-Deployment by the caller. Extracted verbatim from the API deployment so
 both pods stay in lock-step (Deck #183).
 */}}
 {{- define "nextcloud-mcp-server.containerEnv" }}
-            {{- if .Values.settings.content }}
-            # dynaconf settings.toml (NON-SECRET — ConfigMap); env vars override.
+            # The generated dynaconf settings.toml carries the NON-SECRET config
+            # (see templates/_settings.tpl); only secrets + per-pod/auth-coupled
+            # vars are injected as env below. env still overrides the file.
             - name: NEXTCLOUD_MCP_SETTINGS_FILE
               value: {{ printf "%s/settings.toml" (.Values.settings.mountPath | trimSuffix "/") | quote }}
-            {{- end }}
-            # Nextcloud connection
-            - name: NEXTCLOUD_HOST
-              value: {{ .Values.nextcloud.host | quote }}
-            {{- if not .Values.nextcloud.verifySsl }}
-            - name: NEXTCLOUD_VERIFY_SSL
-              value: "false"
-            {{- end }}
-            {{- with .Values.nextcloud.caBundle }}
-            - name: NEXTCLOUD_CA_BUNDLE
-              value: {{ . | quote }}
-            {{- end }}
             {{- if or .Values.database.url .Values.database.existingSecret }}
-            # Centralized database backend (ADR-026). Wins over the
-            # TOKEN_STORAGE_DB local-SQLite path that each auth mode sets
-            # below; the MCP server reads DATABASE_URL first and falls back
-            # to TOKEN_STORAGE_DB only when DATABASE_URL is unset.
+            # Centralized database backend (ADR-026). DATABASE_URL is a SECRET
+            # (the non-secret database.* config is in the generated settings.toml).
             - name: DATABASE_URL
               {{- if .Values.database.existingSecret }}
               valueFrom:
@@ -346,28 +333,6 @@ both pods stay in lock-step (Deck #183).
               {{- else }}
               value: {{ .Values.database.url | quote }}
               {{- end }}
-            {{- end }}
-            {{- if .Values.database.verifySsl }}
-            - name: DATABASE_VERIFY_SSL
-              value: {{ .Values.database.verifySsl | quote }}
-            {{- end }}
-            {{- if or .Values.database.caBundle .Values.database.caBundleSecret.name }}
-            - name: DATABASE_CA_BUNDLE
-              # When caBundleSecret is set, point at the mounted Secret
-              # path; otherwise honor the operator-supplied path directly.
-              value: {{ if .Values.database.caBundleSecret.name -}}
-                     {{ .Values.database.caBundleSecret.mountPath | quote }}
-                     {{- else -}}
-                     {{ .Values.database.caBundle | quote }}
-                     {{- end }}
-            {{- end }}
-            {{- if .Values.database.poolSize }}
-            - name: DATABASE_POOL_SIZE
-              value: {{ .Values.database.poolSize | quote }}
-            {{- end }}
-            {{- if (or (eq (toString .Values.database.maxOverflow) "0") .Values.database.maxOverflow) }}
-            - name: DATABASE_MAX_OVERFLOW
-              value: {{ .Values.database.maxOverflow | quote }}
             {{- end }}
             {{- if eq .Values.auth.mode "basic" }}
             # Basic auth mode (single-user). MCP_DEPLOYMENT_MODE is the
@@ -535,71 +500,6 @@ both pods stay in lock-step (Deck #183).
               value: {{ .Values.documentProcessing.custom.types | quote }}
             {{- end }}
             {{- end }}
-            # Semantic Search (replaces deprecated VECTOR_SYNC_ENABLED)
-            - name: ENABLE_SEMANTIC_SEARCH
-              value: {{ .Values.semanticSearch.enabled | quote }}
-            {{- if .Values.semanticSearch.enabled }}
-            - name: VECTOR_SYNC_SCAN_INTERVAL
-              value: {{ .Values.semanticSearch.scanInterval | quote }}
-            - name: VECTOR_SYNC_PROCESSOR_WORKERS
-              value: {{ .Values.semanticSearch.processorWorkers | quote }}
-            - name: VECTOR_SYNC_QUEUE_MAX_SIZE
-              value: {{ .Values.semanticSearch.queueMaxSize | quote }}
-            {{- with .Values.semanticSearch.excludedTags }}
-            - name: EXCLUDED_TAGS
-              value: {{ . | quote }}
-            {{- end }}
-            {{- end }}
-            # Document Chunking (always set, used by vector sync processor)
-            - name: DOCUMENT_CHUNK_SIZE
-              value: {{ .Values.documentChunking.chunkSize | quote }}
-            - name: DOCUMENT_CHUNK_OVERLAP
-              value: {{ .Values.documentChunking.chunkOverlap | quote }}
-            # Tiered PDF extraction + OCR pipeline (vector-ingestion path).
-            # Always set — independent of documentProcessing.* (the legacy
-            # unstructured/tesseract/custom processors). OCR only runs when
-            # semantic search indexes a scanned PDF and ocr.enabled is true.
-            - name: DOCUMENT_TIER1_ENGINE
-              value: {{ .Values.documentPipeline.tier1Engine | quote }}
-            - name: DOCUMENT_CLASSIFY_ENABLED
-              value: {{ .Values.documentPipeline.classifyEnabled | quote }}
-            # Tier-0 glyph-corruption -> structured escalation (not OCR-gated).
-            - name: DOCUMENT_GLYPH_CORRUPTION_RATIO
-              value: {{ .Values.documentPipeline.glyphCorruptionRatio | quote }}
-            - name: DOCUMENT_PARSE_TIMEOUT_SECONDS
-              value: {{ .Values.documentPipeline.parseTimeoutSeconds | quote }}
-            - name: DOCUMENT_PARSE_MEM_LIMIT_MB
-              value: {{ .Values.documentPipeline.parseMemLimitMb | quote }}
-            - name: DOCUMENT_PDF_GRAPHICS_LIMIT
-              value: {{ .Values.documentPipeline.pdfGraphicsLimit | quote }}
-            - name: DOCUMENT_MAX_PDF_SIZE_MB
-              value: {{ .Values.documentPipeline.maxPdfSizeMb | quote }}
-            - name: DOCUMENT_OCR_ENABLED
-              value: {{ .Values.documentPipeline.ocr.enabled | quote }}
-            {{- if .Values.documentPipeline.ocr.enabled }}
-            - name: DOCUMENT_OCR_PROVIDER
-              value: {{ .Values.documentPipeline.ocr.provider | quote }}
-            - name: DOCUMENT_OCR_MODEL
-              value: {{ .Values.documentPipeline.ocr.model | quote }}
-            - name: DOCUMENT_OCR_TIMEOUT_SECONDS
-              value: {{ .Values.documentPipeline.ocr.timeoutSeconds | quote }}
-            - name: DOCUMENT_OCR_MODE
-              value: {{ .Values.documentPipeline.ocr.mode | quote }}
-            - name: DOCUMENT_OCR_BATCH_POLL_SECONDS
-              value: {{ .Values.documentPipeline.ocr.batchPollSeconds | quote }}
-            - name: DOCUMENT_OCR_BATCH_MAX_WAIT_SECONDS
-              value: {{ .Values.documentPipeline.ocr.batchMaxWaitSeconds | quote }}
-            # OCR escalation tuning (tier-0 triggers; see documentPipeline.ocr.* in
-            # values.yaml).
-            - name: DOCUMENT_OCR_MIN_TEXT_QUALITY
-              value: {{ .Values.documentPipeline.ocr.minTextQuality | quote }}
-            - name: DOCUMENT_OCR_PAGE_FRACTION
-              value: {{ .Values.documentPipeline.ocr.pageFraction | quote }}
-            - name: DOCUMENT_OCR_MIN_PAGE_CHARS
-              value: {{ .Values.documentPipeline.ocr.minPageChars | quote }}
-            - name: DOCUMENT_OCR_DETECT_SCANNED
-              value: {{ .Values.documentPipeline.ocr.detectScanned | quote }}
-            {{- end }}
             # Qdrant Vector Database
             {{- if eq .Values.qdrant.mode "network" }}
             # Network mode: Use dedicated Qdrant service
@@ -676,29 +576,6 @@ both pods stay in lock-step (Deck #183).
               value: {{ .Values.mistral.baseUrl | quote }}
             {{- end }}
             {{- end }}
-            # Observability
-            - name: METRICS_ENABLED
-              value: {{ .Values.observability.metrics.enabled | quote }}
-            - name: METRICS_PORT
-              value: {{ .Values.observability.metrics.port | quote }}
-            {{- if .Values.observability.tracing.enabled }}
-            - name: OTEL_EXPORTER_OTLP_ENDPOINT
-              value: {{ .Values.observability.tracing.endpoint | quote }}
-            - name: OTEL_EXPORTER_VERIFY_SSL
-              value: {{ .Values.observability.tracing.verifySsl | quote }}
-            - name: OTEL_SERVICE_NAME
-              value: {{ .Values.observability.tracing.serviceName | quote }}
-            - name: OTEL_TRACES_SAMPLER
-              value: {{ .Values.observability.tracing.sampler | quote }}
-            - name: OTEL_TRACES_SAMPLER_ARG
-              value: {{ .Values.observability.tracing.samplingRate | quote }}
-            {{- end }}
-            - name: LOG_FORMAT
-              value: {{ .Values.observability.logging.format | quote }}
-            - name: LOG_LEVEL
-              value: {{ .Values.observability.logging.level | quote }}
-            - name: LOG_INCLUDE_TRACE_CONTEXT
-              value: {{ .Values.observability.logging.includeTraceContext | quote }}
             {{- with .Values.extraEnv }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
