@@ -14,6 +14,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable resource limits
 - Grafana dashboard annotations
 
+## nextcloud-mcp-server-0.90.0 (2026-06-28)
+
+### Feat
+
+- **helm**: always generate settings.toml; move non-secret config out of env
+- **helm**: generate non-secret config into settings.toml (WIP: generator)
+
+### Fix
+
+- **helm**: address review on settings.toml generator
+
 ## nextcloud-mcp-server-0.89.0 (2026-06-28)
 
 ### Feat
