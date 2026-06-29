@@ -5,6 +5,23 @@
 # Number of replicas
 replicaCount: 1
 
+# Deployment update strategy (spec.strategy). Default `Recreate` keeps the
+# single-replica default safe — only ever one Pod, so no risk of two concurrent
+# backends during a rollout, and no surge capacity needed. Override with
+# RollingUpdate + maxUnavailable: 0 / maxSurge: 1 for "created before deleted"
+# zero-downtime rollouts (the replacement Pod comes up Ready before the old one
+# is removed) when the workload tolerates a brief 2-Pod overlap — the backend is
+# horizontally scalable (see autoscaling/HPA below), so this is safe; Recreate
+# is just the conservative default. Pairs with podDisruptionBudget.maxUnavailable
+# to let node drains/consolidation proceed gracefully. Example:
+#   strategy:
+#     type: RollingUpdate
+#     rollingUpdate:
+#       maxUnavailable: 0
+#       maxSurge: 1
+strategy:
+  type: Recreate
+
 image:
   repository: ghcr.io/cbcoutinho/nextcloud-mcp-server
   pullPolicy: IfNotPresent
@@ -481,18 +498,29 @@ resources:
     cpu: 100m
     memory: 128Mi
 
-# PodDisruptionBudget for the API (backend) Deployment.
-# With a single replica, minAvailable: 1 stops voluntary disruptions —
-# notably Karpenter consolidation ("Evicted pod: Underutilized") and node
-# drains — from evicting the only API pod and bouncing it between nodes.
-# Opt-in (disabled by default): on a single-replica deployment minAvailable: 1
-# also blocks routine node drains AND `helm upgrade` (the Deployment uses the
-# Recreate strategy, which terminates the old pod first — the PDB will hold that
-# eviction until the pod is disrupted or the PDB is temporarily disabled). Set
-# it where churn protection is wanted (e.g. per-tenant gitops values). Set
-# exactly one of minAvailable / maxUnavailable, and use a positive integer —
-# `0` is treated as unset by the template guards (so e.g. maxUnavailable: 0 is
-# not supported; use minAvailable to block all voluntary disruptions instead).
+# PodDisruptionBudget for the API (backend) Deployment. Two patterns,
+# depending on the `strategy` above:
+#
+# - minAvailable: 1 (with the default Recreate strategy) HARD-pins the single
+#   replica: it stops ALL voluntary disruptions — Karpenter consolidation
+#   ("Evicted pod: Underutilized") and node drains — from evicting the only API
+#   pod. On a 1-replica Deployment this yields ALLOWED DISRUPTIONS = 0, which
+#   also blocks routine node drains AND `helm upgrade` (Recreate terminates the
+#   old pod first, and the PDB holds that eviction). Use only where churn
+#   protection outweighs ever consolidating the node.
+#
+# - maxUnavailable: 1 (paired with a RollingUpdate surge strategy:
+#   maxUnavailable: 0 / maxSurge: 1) is the graceful alternative: it ALLOWS the
+#   eviction so node drains/consolidation proceed, while the surge strategy
+#   brings the replacement pod up Ready before the old one is removed on a
+#   rollout — so a `cordon + rollout restart` migration keeps ≥1 pod serving.
+#   (A raw `kubectl drain` evicts before rescheduling, so prefer rollout-driven
+#   moves for zero-gap; the PDB just stops the drain from being blocked.)
+#
+# Opt-in (disabled by default). Set exactly one of minAvailable / maxUnavailable,
+# and use a positive integer — `0` is treated as unset by the template guards
+# (so maxUnavailable: 0 is not a valid "block everything" value; use
+# minAvailable for that).
 podDisruptionBudget:
   enabled: false
   minAvailable: 1
