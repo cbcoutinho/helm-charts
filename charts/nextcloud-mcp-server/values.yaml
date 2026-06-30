@@ -651,6 +651,16 @@ webhooks:
 semanticSearch:
   # Enable semantic search and background vector synchronization
   enabled: false
+  # Search mode (SEARCH_MODE, ADR-030; requires app image >= 0.127.0).
+  #   hybrid  (default): dense embeddings + BM25 sparse vectors, fused at query
+  #           time. Needs an embedding provider (Ollama/OpenAI/Mistral/Bedrock/
+  #           gateway — configured below).
+  #   keyword: BM25 sparse (full-text/keyword) only. NO embedding provider is
+  #           contacted at ingestion or query time, so this supports fully
+  #           airgapped deployments with no embedding endpoint — you still get
+  #           the unified cross-app Qdrant index, just without semantic recall.
+  # keyword mode still requires enabled: true (it uses the Qdrant pipeline).
+  searchMode: hybrid
   # Scan interval in seconds (how often to check for changes)
   scanInterval: 3600
   # Number of concurrent processor workers

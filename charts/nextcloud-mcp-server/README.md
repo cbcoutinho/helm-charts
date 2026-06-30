@@ -254,6 +254,7 @@ Enable semantic search capabilities with BM25 hybrid search by deploying a vecto
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 | `semanticSearch.enabled` | Enable semantic search and background vector synchronization | `false` |
+| `semanticSearch.searchMode` | Search mode (`SEARCH_MODE`, requires app `>= 0.127.0`): `hybrid` (dense + BM25, needs an embedding provider) or `keyword` (BM25 sparse only — no embedding endpoint, for airgapped deployments) | `hybrid` |
 | `semanticSearch.scanInterval` | Scan interval in seconds | `3600` |
 | `semanticSearch.processorWorkers` | Number of concurrent processor workers | `3` |
 | `semanticSearch.queueMaxSize` | Maximum queue size for pending documents | `10000` |
