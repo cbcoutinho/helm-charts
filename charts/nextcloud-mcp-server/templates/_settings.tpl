@@ -26,19 +26,11 @@ NEXTCLOUD_VERIFY_SSL = false
 {{- with .Values.nextcloud.caBundle }}
 NEXTCLOUD_CA_BUNDLE = {{ . | quote }}
 {{- end }}
-# Database (non-secret config; DATABASE_URL stays a Secret env)
-{{- if .Values.database.verifySsl }}
-{{- /* Use "true"/"false" (strings) — a bare YAML bool false is falsy in Go
-       templates and would silently omit this key (app default None/prefer). */}}
-DATABASE_VERIFY_SSL = {{ .Values.database.verifySsl }}
-{{- end }}
-{{- if or .Values.database.caBundle .Values.database.caBundleSecret.name }}
-{{- if .Values.database.caBundleSecret.name }}
-DATABASE_CA_BUNDLE = {{ .Values.database.caBundleSecret.mountPath | quote }}
-{{- else }}
-DATABASE_CA_BUNDLE = {{ .Values.database.caBundle | quote }}
-{{- end }}
-{{- end }}
+# Database (non-secret config; DATABASE_URL stays a Secret env).
+# TLS is configured inside DATABASE_URL itself (e.g. ?sslmode=require) — the
+# server passes the URL through verbatim (Model A, ADR-026), so there are no
+# DATABASE_VERIFY_SSL / DATABASE_CA_BUNDLE settings any more
+# (nextcloud-mcp-server >= 0.129.5).
 {{- /* poolSize: 0 is intentionally omitted (it disables SQLAlchemy pooling and
        errors) — unlike maxOverflow below, where 0 (no overflow) is valid and so
        is emitted explicitly via the toString "0" guard. */}}
