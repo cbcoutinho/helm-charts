@@ -138,12 +138,6 @@ spec:
               mountPath: /tmp
             - name: data-storage
               mountPath: /app/data
-            {{- if $.Values.database.caBundleSecret.name }}
-            - name: database-ca-bundle
-              mountPath: {{ $.Values.database.caBundleSecret.mountPath | quote }}
-              subPath: {{ $.Values.database.caBundleSecret.key | quote }}
-              readOnly: true
-            {{- end }}
             {{- include "nextcloud-mcp-server.settingsVolumeMount" $ | nindent 12 }}
             {{- with $.Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
@@ -155,14 +149,6 @@ spec:
         # passwords; /app/data is just a writable mount for the read-only rootfs.
         - name: data-storage
           emptyDir: {}
-        {{- if $.Values.database.caBundleSecret.name }}
-        - name: database-ca-bundle
-          secret:
-            secretName: {{ $.Values.database.caBundleSecret.name | quote }}
-            items:
-              - key: {{ $.Values.database.caBundleSecret.key | quote }}
-                path: {{ $.Values.database.caBundleSecret.key | quote }}
-        {{- end }}
         {{- include "nextcloud-mcp-server.settingsVolume" $ | nindent 8 }}
         {{- with $.Values.volumes }}
         {{- toYaml . | nindent 8 }}

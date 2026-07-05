@@ -60,7 +60,7 @@ nextcloud:
   # Set to false only for self-signed certs in trusted networks.
   # Must be a bare YAML bool (true/false), NOT a quoted string — a quoted "false"
   # is truthy in Go templates and would silently leave NEXTCLOUD_VERIFY_SSL unset
-  # (app default: verify). (Note database.verifySsl is the opposite — a string.)
+  # (app default: verify).
   verifySsl: true
   # In-container path to a PEM CA bundle for a private CA (NEXTCLOUD_CA_BUNDLE).
   # The chart only sets the env var — mount the file yourself via the top-level
@@ -295,32 +295,17 @@ database:
   existingSecret: ""
   existingSecretKey: "DATABASE_URL"
 
-  # TLS verification for the Postgres backend (ADR-026).
-  # Unset (default) → libpq's `prefer` mode (TLS if offered, no
-  # verification — works for cluster-internal Postgres without TLS).
-  # "true" → full cert verification (sslmode=verify-full). "false" →
-  # encrypt without verifying (sslmode=require; homelab / self-signed).
-  # Prefer caBundle over "false" for production.
-  #
-  # Accepts ONLY "true" / "false" / "" — it is rendered as a bare TOML bool in the
-  # generated settings.toml (DATABASE_VERIFY_SSL), so any other string would be
-  # invalid TOML. Empty (default) is omitted, preserving the app's None/prefer
-  # behaviour.
-  verifySsl: ""
-
-  # Path *inside the container* to a PEM file containing a private CA.
-  # Implies verifySsl=true. Either set this directly (when you're
-  # already mounting certs from elsewhere) or use caBundleSecret below
-  # to have the chart mount a Secret for you.
-  caBundle: ""
-
-  # Mount a Secret as the CA bundle file and auto-set caBundle to the
-  # in-container path. Operator-friendly path: store the CA in a Secret
-  # alongside the DATABASE_URL Secret and reference both from values.
-  caBundleSecret:
-    name: ""
-    key: ""
-    mountPath: "/etc/ssl/database-ca.crt"
+  # TLS for the Postgres backend is configured INSIDE the DATABASE_URL itself
+  # (ADR-026, Model A) — the server passes the URL through verbatim and libpq
+  # reads the `sslmode` query param directly. Examples:
+  #   ...?sslmode=require                       # encrypt, no cert verification
+  #   ...?sslmode=verify-full&sslrootcert=/path # verify against a private CA
+  # Omitting `sslmode` leaves libpq's default (`prefer`). There are no longer any
+  # database.verifySsl / database.caBundle chart values (removed in chart
+  # 0.93.0; the app dropped DATABASE_VERIFY_SSL / DATABASE_CA_BUNDLE in
+  # nextcloud-mcp-server 0.129.5). To use a private CA, mount it yourself via
+  # `volumes`/`volumeMounts` and point `sslrootcert=` at the mounted path in the
+  # DATABASE_URL Secret.
 
   # SQLAlchemy connection pool sizing (ADR-026). Max per-pod
   # connections = poolSize + maxOverflow. With many replicas this can
