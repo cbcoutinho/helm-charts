@@ -14,6 +14,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable resource limits
 - Grafana dashboard annotations
 
+## nextcloud-mcp-server-0.93.0 (2026-07-05)
+
+### BREAKING CHANGE
+
+- database.verifySsl, database.caBundle, and database.caBundleSecret
+are removed. Operators using them must configure Postgres TLS via the `sslmode`
+(and `sslrootcert`) query params in DATABASE_URL instead, mounting any private-CA
+file themselves.
+
+### Feat
+
+- **helm**: drop Postgres TLS chart values; configure via DATABASE_URL sslmode
+
 ## nextcloud-mcp-server-0.92.11 (2026-07-05)
 
 ## nextcloud-mcp-server-0.92.10 (2026-07-05)
