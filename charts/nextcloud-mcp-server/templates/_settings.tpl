@@ -72,7 +72,6 @@ DOCUMENT_OCR_DETECT_SCANNED = {{ .Values.documentPipeline.ocr.detectScanned }}
 # Semantic search / vector sync
 ENABLE_SEMANTIC_SEARCH = {{ .Values.semanticSearch.enabled }}
 {{- if .Values.semanticSearch.enabled }}
-SEARCH_MODE = {{ .Values.semanticSearch.searchMode | quote }}
 VECTOR_SYNC_SCAN_INTERVAL = {{ .Values.semanticSearch.scanInterval }}
 VECTOR_SYNC_PROCESSOR_WORKERS = {{ .Values.semanticSearch.processorWorkers }}
 VECTOR_SYNC_QUEUE_MAX_SIZE = {{ .Values.semanticSearch.queueMaxSize }}
