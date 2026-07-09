@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable resource limits
 - Grafana dashboard annotations
 
+## nextcloud-mcp-server-0.94.0 (2026-07-09)
+
+### Feat
+
+- **helm**: drop semanticSearch.searchMode / SEARCH_MODE env
+
 ## nextcloud-mcp-server-0.93.4 (2026-07-09)
 
 ## nextcloud-mcp-server-0.93.3 (2026-07-06)
