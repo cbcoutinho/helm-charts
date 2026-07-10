@@ -258,6 +258,8 @@ Enable semantic search capabilities with BM25 hybrid search by deploying a vecto
 | `semanticSearch.processorWorkers` | Number of concurrent processor workers | `3` |
 | `semanticSearch.queueMaxSize` | Maximum queue size for pending documents | `10000` |
 | `semanticSearch.excludedTags` | Comma-separated Nextcloud tag names to exclude from indexing (`EXCLUDED_TAGS`) | `""` |
+| `semanticSearch.vectorTag` | Nextcloud tag marking files for hybrid (dense + BM25 sparse) indexing (`VECTOR_SYNC_TAG`) | `"vector-index"` |
+| `semanticSearch.keywordTag` | Nextcloud tag marking files for keyword-only (BM25 sparse) indexing (`VECTOR_SYNC_KEYWORD_TAG`); set `""` to disable; hybrid wins when a file carries both | `"keyword-index"` |
 
 **Ingest Queue Configuration (Deck #183):**
 

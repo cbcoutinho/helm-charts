@@ -645,6 +645,15 @@ semanticSearch:
   # Comma-separated Nextcloud tag names to exclude from indexing (EXCLUDED_TAGS).
   # Documents carrying any of these tags are skipped by the vector sync.
   excludedTags: ""
+  # Nextcloud system tag marking files for HYBRID indexing — dense embeddings +
+  # BM25 sparse (VECTOR_SYNC_TAG). Rename only if you use a different include tag;
+  # must be non-empty.
+  vectorTag: "vector-index"
+  # Nextcloud system tag marking files for KEYWORD-ONLY indexing — BM25 sparse,
+  # no dense embedding (VECTOR_SYNC_KEYWORD_TAG). Files carrying it are indexed
+  # sparse-only into the same collection; vectorTag (hybrid) wins when a file
+  # carries both. Set to "" to disable keyword-only indexing entirely.
+  keywordTag: "keyword-index"
 
 # Ingest queue backend (Deck #183).
 #
