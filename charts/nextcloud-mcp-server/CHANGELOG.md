@@ -14,6 +14,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable resource limits
 - Grafana dashboard annotations
 
+## nextcloud-mcp-server-0.95.0 (2026-07-10)
+
+### Feat
+
+- **helm**: pin appVersion to 0.133.0 for VECTOR_SYNC_TAG
+- **helm**: expose vectorTag + keywordTag index-mode settings
+
+### Fix
+
+- **helm**: fail-fast when semanticSearch.vectorTag is empty
+
 ## nextcloud-mcp-server-0.94.1 (2026-07-10)
 
 ## nextcloud-mcp-server-0.94.0 (2026-07-09)
