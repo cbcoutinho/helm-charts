@@ -78,7 +78,7 @@ VECTOR_SYNC_QUEUE_MAX_SIZE = {{ .Values.semanticSearch.queueMaxSize }}
 {{- with .Values.semanticSearch.excludedTags }}
 EXCLUDED_TAGS = {{ . | quote }}
 {{- end }}
-VECTOR_SYNC_TAG = {{ .Values.semanticSearch.vectorTag | quote }}
+VECTOR_SYNC_TAG = {{ required "semanticSearch.vectorTag must be a non-empty Nextcloud tag name (the app rejects an empty VECTOR_SYNC_TAG)" .Values.semanticSearch.vectorTag | quote }}
 VECTOR_SYNC_KEYWORD_TAG = {{ .Values.semanticSearch.keywordTag | quote }}
 {{- end }}
 # Observability
