@@ -455,6 +455,13 @@ The chart includes comprehensive observability features including Prometheus met
 | `observability.tracing.sampler` | OTEL sampler strategy (`OTEL_TRACES_SAMPLER`): `always_on`, `always_off`, `traceidratio`, `parentbased_*` | `always_on` |
 | `observability.tracing.verifySsl` | Verify TLS to the OTLP endpoint (`OTEL_EXPORTER_VERIFY_SSL`) | `false` |
 
+**Profiling Configuration (Pyroscope, requires appVersion ≥ 0.137.0):**
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `observability.profiling.enabled` | Enable continuous profiling; pushes CPU/wall profiles to `serverAddress` (`PYROSCOPE_ENABLED`) | `false` |
+| `observability.profiling.serverAddress` | Pyroscope-compatible ingest endpoint, e.g. Grafana Alloy's `pyroscope.receive_http` (`PYROSCOPE_SERVER_ADDRESS`) | `""` |
+
 **Logging Configuration:**
 
 | Parameter | Description | Default |
