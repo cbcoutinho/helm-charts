@@ -91,6 +91,10 @@ OTEL_SERVICE_NAME = {{ .Values.observability.tracing.serviceName | quote }}
 OTEL_TRACES_SAMPLER = {{ .Values.observability.tracing.sampler | quote }}
 OTEL_TRACES_SAMPLER_ARG = {{ .Values.observability.tracing.samplingRate }}
 {{- end }}
+{{- if .Values.observability.profiling.enabled }}
+PYROSCOPE_ENABLED = {{ .Values.observability.profiling.enabled }}
+PYROSCOPE_SERVER_ADDRESS = {{ .Values.observability.profiling.serverAddress | quote }}
+{{- end }}
 LOG_FORMAT = {{ .Values.observability.logging.format | quote }}
 LOG_LEVEL = {{ .Values.observability.logging.level | quote }}
 LOG_INCLUDE_TRACE_CONTEXT = {{ .Values.observability.logging.includeTraceContext }}

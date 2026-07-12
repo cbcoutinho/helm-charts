@@ -413,6 +413,17 @@ observability:
     # Verify TLS to the OTLP endpoint (OTEL_EXPORTER_VERIFY_SSL).
     verifySsl: false
 
+  # Continuous profiling (Pyroscope). Opt-in. When enabled, the API and ingest
+  # worker push CPU/wall profiles to `serverAddress` — a Pyroscope-compatible
+  # ingest endpoint such as Grafana Alloy's pyroscope.receive_http (which
+  # forwards to Pyroscope). Requires appVersion >= 0.137.0 (the image ships the
+  # pyroscope-io SDK via the `observability` extra). Maps to PYROSCOPE_ENABLED /
+  # PYROSCOPE_SERVER_ADDRESS; a load/config failure degrades to a warning rather
+  # than crashing startup.
+  profiling:
+    enabled: false
+    serverAddress: ""  # e.g., "http://alloy.alloy.svc.cluster.local:4041"
+
   # Logging configuration
   logging:
     format: json  # "json" or "text"
