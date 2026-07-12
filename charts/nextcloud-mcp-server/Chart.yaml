@@ -2,7 +2,7 @@ apiVersion: v2
 name: nextcloud-mcp-server
 description: A Helm chart for deploying Nextcloud MCP Server - enables AI assistants to interact with Nextcloud
 type: application
-version: 0.96.0
+version: 0.95.2
 appVersion: "0.137.0"
 # policy/v1 (PodDisruptionBudget) was promoted in Kubernetes 1.21.
 kubeVersion: ">=1.21.0-0"
@@ -29,10 +29,10 @@ annotations:
   grafana_dashboard: "true"
   grafana_dashboard_folder: "Nextcloud MCP"
   artifacthub.io/changes: |
-    - kind: added
-      description: "observability.profiling (Pyroscope) config — sets PYROSCOPE_ENABLED / PYROSCOPE_SERVER_ADDRESS on the API + worker"
     - kind: changed
-      description: "update ghcr.io/cbcoutinho/nextcloud-mcp-server docker tag to v0.137.0"
+      description: "update ghcr.io/cbcoutinho/nextcloud-mcp-server docker tag to v0.136.0"
+    - kind: changed
+      description: "update anthropics/claude-code-action action to v1.0.171"
 dependencies:
   - name: qdrant
     version: "1.18.2"
