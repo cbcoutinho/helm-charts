@@ -6,6 +6,53 @@ entries:
         - kind: changed
           description: "Bump helm chart app version"
         - kind: changed
+          description: "update anthropics/claude-code-action action to v1.0.175"
+      grafana_dashboard: "true"
+      grafana_dashboard_folder: Nextcloud MCP
+    apiVersion: v2
+    appVersion: 0.140.0
+    created: "2026-07-16T18:08:38.806469419Z"
+    dependencies:
+    - condition: qdrant.networkMode.deploySubchart
+      name: qdrant
+      repository: https://qdrant.github.io/qdrant-helm
+      version: 1.18.2
+    - condition: ollama.enabled
+      name: ollama
+      repository: https://otwld.github.io/ollama-helm
+      version: 1.66.0
+    description: A Helm chart for deploying Nextcloud MCP Server - enables AI assistants
+      to interact with Nextcloud
+    digest: ca01cc4c023d738fc7c1407037582f53224fd7a0b7592c772a31cae0d6a94594
+    home: https://github.com/cbcoutinho/nextcloud-mcp-server
+    icon: https://raw.githubusercontent.com/nextcloud/server/master/core/img/logo/logo.svg
+    keywords:
+    - nextcloud
+    - mcp
+    - model-context-protocol
+    - llm
+    - ai
+    - claude
+    - webdav
+    - caldav
+    - carddav
+    - helm
+    kubeVersion: '>=1.21.0-0'
+    maintainers:
+    - email: chris@coutinho.io
+      name: Chris Coutinho
+    name: nextcloud-mcp-server
+    sources:
+    - https://github.com/cbcoutinho/nextcloud-mcp-server
+    type: application
+    urls:
+    - https://github.com/cbcoutinho/helm-charts/releases/download/nextcloud-mcp-server-0.96.6/nextcloud-mcp-server-0.96.6.tgz
+    version: 0.96.6
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: changed
+          description: "Bump helm chart app version"
+        - kind: changed
           description: "update anthropics/claude-code-action action to v1.0.174"
       grafana_dashboard: "true"
       grafana_dashboard_folder: Nextcloud MCP
@@ -5301,4 +5348,4 @@ entries:
     urls:
     - https://github.com/cbcoutinho/helm-charts/releases/download/nextcloud-mcp-server-0.59.1/nextcloud-mcp-server-0.59.1.tgz
     version: 0.59.1
-generated: "2026-07-15T22:54:31.885743753Z"
+generated: "2026-07-16T18:08:38.80687127Z"
