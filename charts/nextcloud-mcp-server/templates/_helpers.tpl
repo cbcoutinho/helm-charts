@@ -312,7 +312,12 @@ Catch it at template time with an actionable message instead.
 {{- if ne $spool "/tmp" -}}
   {{- $covered := false -}}
   {{- range .Values.volumeMounts -}}
-    {{- if hasPrefix .mountPath $spool -}}
+    {{- /* Compare on path boundaries, not raw string prefixes: a plain
+           hasPrefix would let a mount at /data "cover" a spoolDir of
+           /database, passing this check and failing at runtime instead. */ -}}
+    {{- $mount := trimSuffix "/" .mountPath -}}
+    {{- $dir := trimSuffix "/" $spool -}}
+    {{- if or (eq $mount $dir) (hasPrefix (printf "%s/" $mount) (printf "%s/" $dir)) -}}
       {{- $covered = true -}}
     {{- end -}}
   {{- end -}}
