@@ -294,6 +294,35 @@ Always rendered unconditionally (no call-site guard) — the ConfigMap always
 exists and both the api and ingest-worker pods always mount it.
 */}}
 {{/*
+Fail fast when documentPipeline.spoolDir has no writable mount behind it.
+
+The chart mounts one writable volume, at /tmp, and both pods run with
+readOnlyRootFilesystem: true. /tmp must stay mounted there regardless of
+spoolDir -- the app also uses tempfile.gettempdir() for pdf-image extraction,
+bbox/highlight scratch dirs and the ephemeral token DB, so relocating that mount
+to follow spoolDir would break those instead.
+
+So a custom spoolDir is a bring-your-own-volume feature: the user supplies a
+volume + volumeMount covering it via .Values.volumes/.Values.volumeMounts.
+Without one, every spool write fails against the read-only rootfs at runtime.
+Catch it at template time with an actionable message instead.
+*/}}
+{{- define "nextcloud-mcp-server.validateSpoolDir" -}}
+{{- $spool := .Values.documentPipeline.spoolDir -}}
+{{- if ne $spool "/tmp" -}}
+  {{- $covered := false -}}
+  {{- range .Values.volumeMounts -}}
+    {{- if hasPrefix .mountPath $spool -}}
+      {{- $covered = true -}}
+    {{- end -}}
+  {{- end -}}
+  {{- if not $covered -}}
+    {{- fail (printf "documentPipeline.spoolDir is %s but no volumeMount covers it. The chart only mounts a writable volume at /tmp and the pods run with readOnlyRootFilesystem, so spool writes would fail at runtime. Either leave spoolDir at /tmp, or add a volume + volumeMount covering %s via .Values.volumes and .Values.volumeMounts." $spool $spool) -}}
+  {{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
 The /tmp volume, which backs the ingest spool (documentPipeline.spoolDir).
 
 Used by BOTH the api and ingest-worker pods: with ingest.splitWorker false (the

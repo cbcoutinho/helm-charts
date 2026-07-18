@@ -161,6 +161,7 @@ spec:
               mountPath: /qdrant/snapshots
         {{- end }}
       volumes:
+        {{- include "nextcloud-mcp-server.validateSpoolDir" . }}
         {{- include "nextcloud-mcp-server.spoolVolume" . | nindent 8 }}
         {{- if or (and (eq .Values.auth.mode "oauth") .Values.auth.oauth.persistence.enabled) (and (eq .Values.auth.mode "login-flow") .Values.auth.loginFlow.persistence.enabled) }}
         - name: oauth-storage

@@ -821,11 +821,19 @@ documentPipeline:
   # buffered path is the higher-memory one, so it is not a safe fallback under
   # memory pressure.
   streamDownloadEnabled: true
-  # Directory for ingest spool files. Must be a writable volume with room for
-  # roughly (worker concurrency x maxPdfSizeMb). Pinned explicitly rather than
-  # left to the system temp dir: the worker's startup sweep for orphaned spools
-  # only scans this path, so an implicit value that drifts (e.g. via TMPDIR)
-  # would leave leaked documents uncollected.
+  # Directory for ingest spool files. Pinned explicitly rather than left to the
+  # system temp dir: the worker's startup sweep for orphaned spools only scans
+  # this path, so an implicit value that drifts (e.g. via TMPDIR) would leave
+  # leaked documents uncollected.
+  #
+  # /tmp is the only writable volume this chart mounts, and the pods run with
+  # readOnlyRootFilesystem: true. /tmp stays mounted there regardless of this
+  # value -- the app also uses the system temp dir for pdf-image extraction,
+  # bbox/highlight scratch and the ephemeral token DB -- so pointing spoolDir
+  # elsewhere is a BRING-YOUR-OWN-VOLUME feature: supply a volume + volumeMount
+  # covering it via .Values.volumes / .Values.volumeMounts. The chart fails at
+  # template time if you set a path nothing mounts, rather than letting every
+  # spool write fail at runtime.
   spoolDir: /tmp
   # Size limit for the worker's /tmp emptyDir, which backs the spool directory.
   # That emptyDir lives on the node's root filesystem, shared with container
