@@ -383,6 +383,9 @@ OCR backend selection is independent of the embedding provider — you can embed
 | `documentPipeline.parseProcessSlots` | Max concurrent isolated parse subprocesses (otherwise `os.cpu_count()`) | `2` |
 | `documentPipeline.pdfGraphicsLimit` | Max vector graphics per PDF before bailing (pymupdf path) | `1000` |
 | `documentPipeline.maxPdfSizeMb` | Pre-parse size cap (MB); larger PDFs fail fast (`oversize`) instead of burning the timeout; `0` disables | `50` |
+| `documentPipeline.streamDownloadEnabled` | Stream document downloads to a spool file instead of buffering the whole body in memory | `true` |
+| `documentPipeline.spoolDir` | Directory the ingest spool writes to. Anything other than `/tmp` (or a path under it) is bring-your-own-volume: you must add a `volumes`/`volumeMounts` pair covering it, or the chart fails to render | `/tmp` |
+| `documentPipeline.spoolSizeLimit` | `sizeLimit` on the `/tmp` emptyDir backing the spool. This emptyDir lives on the node's root filesystem, so an unbounded spool competes with the kubelet; empty string leaves it unbounded | `2Gi` |
 | `documentPipeline.ocr.enabled` | Enable tier-3 OCR for scanned PDFs | `false` |
 | `documentPipeline.ocr.provider` | OCR backend: `auto`, `gateway`, `mistral`, `none` | `auto` |
 | `documentPipeline.ocr.model` | Provider-namespaced OCR model id | `mistral/mistral-ocr-latest` |
@@ -867,6 +870,28 @@ Readiness (returns 200 if ready, 503 if not ready):
 4. **Resource constraints**
    - Increase memory limits if seeing OOM errors
    - Adjust CPU requests based on load
+
+## Development: chart tests
+
+Template-rendering tests live in `tests/` and run with
+[helm-unittest](https://github.com/helm-unittest/helm-unittest). They render the
+chart locally — no cluster, no release:
+
+```bash
+helm plugin install https://github.com/helm-unittest/helm-unittest --version v1.1.1 --verify=false
+helm unittest charts/nextcloud-mcp-server
+```
+
+CI runs `helm lint`, `helm template` and this suite on every PR touching
+`charts/**` (`.github/workflows/helm-test.yml`).
+
+Note this is deliberately *not* the [chart test hook](https://helm.sh/docs/topics/chart_tests/)
+pattern (`helm test` against an installed release). The failure mode this chart
+actually has is bad *rendering* — an unbounded volume in the default topology, a
+quantity suffix the API server rejects, a path guard that compares raw string
+prefixes. All of those are visible from `helm template` alone, and a test hook
+Pod would catch none of them. Add cases here when you add a value with real
+semantics; each existing case corresponds to a bug that reached review.
 
 ## Security Considerations
 

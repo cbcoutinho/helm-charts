@@ -289,11 +289,6 @@ If not specified:
 {{- end }}
 
 {{/*
-Settings volume + mount for the generated dynaconf settings.toml ConfigMap.
-Always rendered unconditionally (no call-site guard) — the ConfigMap always
-exists and both the api and ingest-worker pods always mount it.
-*/}}
-{{/*
 Fail fast when documentPipeline.spoolDir has no writable mount behind it.
 
 The chart mounts one writable volume, at /tmp, and both pods run with
@@ -353,6 +348,11 @@ itself. An empty spoolSizeLimit preserves the previous unbounded behaviour.
   {{- end }}
 {{- end -}}
 
+{{/*
+Settings volume + mount for the generated dynaconf settings.toml ConfigMap.
+Always rendered unconditionally (no call-site guard) — the ConfigMap always
+exists and both the api and ingest-worker pods always mount it.
+*/}}
 {{- define "nextcloud-mcp-server.settingsVolume" -}}
 - name: app-settings
   configMap:
