@@ -308,22 +308,27 @@ Without one, every spool write fails against the read-only rootfs at runtime.
 Catch it at template time with an actionable message instead.
 */}}
 {{- define "nextcloud-mcp-server.validateSpoolDir" -}}
-{{- $spool := .Values.documentPipeline.spoolDir -}}
-{{- if ne $spool "/tmp" -}}
-  {{- $covered := false -}}
-  {{- range .Values.volumeMounts -}}
-    {{- /* Compare on path boundaries, not raw string prefixes: a plain
-           hasPrefix would let a mount at /data "cover" a spoolDir of
-           /database, passing this check and failing at runtime instead. */ -}}
-    {{- $mount := trimSuffix "/" .mountPath -}}
-    {{- $dir := trimSuffix "/" $spool -}}
-    {{- if or (eq $mount $dir) (hasPrefix (printf "%s/" $mount) (printf "%s/" $dir)) -}}
-      {{- $covered = true -}}
-    {{- end -}}
+{{- $spool := trimSuffix "/" .Values.documentPipeline.spoolDir -}}
+{{- /* Candidates: the chart's own always-mounted /tmp, plus any extra mounts
+       the user supplied. Seeding /tmp here rather than special-casing it keeps
+       ONE comparison for every candidate -- an exact-match special case missed
+       subdirectories of /tmp, which are covered and writable. */ -}}
+{{- $mounts := list "/tmp" -}}
+{{- range .Values.volumeMounts -}}
+  {{- $mounts = append $mounts .mountPath -}}
+{{- end -}}
+{{- $covered := false -}}
+{{- range $mounts -}}
+  {{- /* Path-boundary comparison, not a raw string prefix: a mount at /data
+         must not "cover" a spoolDir of /database. Trailing slashes trimmed so
+         `/spool/` and `/spool` behave identically. */ -}}
+  {{- $mount := trimSuffix "/" . -}}
+  {{- if or (eq $mount $spool) (hasPrefix (printf "%s/" $mount) (printf "%s/" $spool)) -}}
+    {{- $covered = true -}}
   {{- end -}}
-  {{- if not $covered -}}
-    {{- fail (printf "documentPipeline.spoolDir is %s but no volumeMount covers it. The chart only mounts a writable volume at /tmp and the pods run with readOnlyRootFilesystem, so spool writes would fail at runtime. Either leave spoolDir at /tmp, or add a volume + volumeMount covering %s via .Values.volumes and .Values.volumeMounts." $spool $spool) -}}
-  {{- end -}}
+{{- end -}}
+{{- if not $covered -}}
+  {{- fail (printf "documentPipeline.spoolDir is %s but no volumeMount covers it. The chart only mounts a writable volume at /tmp and the pods run with readOnlyRootFilesystem, so spool writes would fail at runtime. Either point spoolDir at /tmp (or a path under it), or add a volume + volumeMount covering %s via .Values.volumes and .Values.volumeMounts." $spool $spool) -}}
 {{- end -}}
 {{- end -}}
 
