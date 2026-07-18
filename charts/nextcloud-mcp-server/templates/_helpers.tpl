@@ -293,6 +293,27 @@ Settings volume + mount for the generated dynaconf settings.toml ConfigMap.
 Always rendered unconditionally (no call-site guard) — the ConfigMap always
 exists and both the api and ingest-worker pods always mount it.
 */}}
+{{/*
+The /tmp volume, which backs the ingest spool (documentPipeline.spoolDir).
+
+Used by BOTH the api and ingest-worker pods: with ingest.splitWorker false (the
+default) the API pod processes documents in-process and spools to its own /tmp,
+so bounding only the worker would leave the default topology unbounded.
+
+This emptyDir lives on the node's root filesystem, shared with container images,
+logs and other pods' scratch, so an unbounded spool competes with the kubelet
+itself. An empty spoolSizeLimit preserves the previous unbounded behaviour.
+*/}}
+{{- define "nextcloud-mcp-server.spoolVolume" -}}
+- name: tmp
+  {{- with .Values.documentPipeline.spoolSizeLimit }}
+  emptyDir:
+    sizeLimit: {{ . }}
+  {{- else }}
+  emptyDir: {}
+  {{- end }}
+{{- end -}}
+
 {{- define "nextcloud-mcp-server.settingsVolume" -}}
 - name: app-settings
   configMap:

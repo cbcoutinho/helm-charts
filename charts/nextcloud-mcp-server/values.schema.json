@@ -28,7 +28,7 @@
         "spoolDir": { "type": "string", "minLength": 1 },
         "spoolSizeLimit": {
           "type": "string",
-          "pattern": "^$|^[0-9]+(\\.[0-9]+)?(Ki|Mi|Gi|Ti|K|M|G|T)?$"
+          "pattern": "^$|^[0-9]+(\\.[0-9]+)?(Ki|Mi|Gi|Ti|Pi|Ei|k|M|G|T|P|E)?$"
         },
         "ocr": {
           "type": "object",
