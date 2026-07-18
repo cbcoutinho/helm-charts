@@ -143,8 +143,16 @@ spec:
             {{- toYaml . | nindent 12 }}
             {{- end }}
       volumes:
+        # Backs the ingest spool (documentPipeline.spoolDir). Bounded so a
+        # runaway download cannot consume the node's root filesystem, which this
+        # emptyDir shares with container images, logs and other pods' scratch.
         - name: tmp
+          {{- with $.Values.documentPipeline.spoolSizeLimit }}
+          emptyDir:
+            sizeLimit: {{ . }}
+          {{- else }}
           emptyDir: {}
+          {{- end }}
         # The worker uses DATABASE_URL for both the queue and stored app
         # passwords; /app/data is just a writable mount for the read-only rootfs.
         - name: data-storage
