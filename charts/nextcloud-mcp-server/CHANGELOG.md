@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable resource limits
 - Grafana dashboard annotations
 
+## nextcloud-mcp-server-0.97.0 (2026-07-18)
+
+### Feat
+
+- **helm**: expose PDF parse memory bounds from nextcloud-mcp-server 0.141.0
+
 ## nextcloud-mcp-server-0.96.10 (2026-07-18)
 
 ## nextcloud-mcp-server-0.96.9 (2026-07-17)
