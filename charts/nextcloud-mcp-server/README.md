@@ -379,6 +379,8 @@ OCR backend selection is independent of the embedding provider — you can embed
 | `documentPipeline.glyphCorruptionRatio` | Doc-level C0-control-char ratio above which a glyph-corrupt (broken `/ToUnicode`) text layer escalates `fast`→`structured` (pymupdf); `0` disables | `0.02` |
 | `documentPipeline.parseTimeoutSeconds` | Per-PDF parse timeout (seconds) | `120` |
 | `documentPipeline.parseMemLimitMb` | RLIMIT_AS memory cap for the parse subprocess (MB) | `1536` |
+| `documentPipeline.parsePageWindow` | Pages per pypdfium2 extraction window; bounds peak RSS on page-heavy PDFs; `0` disables windowing | `100` |
+| `documentPipeline.parseProcessSlots` | Max concurrent isolated parse subprocesses (otherwise `os.cpu_count()`) | `2` |
 | `documentPipeline.pdfGraphicsLimit` | Max vector graphics per PDF before bailing (pymupdf path) | `1000` |
 | `documentPipeline.maxPdfSizeMb` | Pre-parse size cap (MB); larger PDFs fail fast (`oversize`) instead of burning the timeout; `0` disables | `50` |
 | `documentPipeline.ocr.enabled` | Enable tier-3 OCR for scanned PDFs | `false` |

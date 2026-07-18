@@ -791,6 +791,18 @@ documentPipeline:
   # RLIMIT_AS memory cap (MB) applied in the parse subprocess. Keep below the
   # pod memory limit.
   parseMemLimitMb: 1536
+  # Pages per pypdfium2 extraction window. PDFium retains parsed page objects for
+  # the document's lifetime (~0.5 MB/page) and page.close() does not give them
+  # back, so extracting a large document in one open scales peak RSS with page
+  # count (a 4003-page file cost ~1900 MB). Re-opening every N pages caps that at
+  # one window's worth, with byte-identical output. 0 disables windowing
+  # (single open, pre-0.141 behaviour).
+  parsePageWindow: 100
+  # Max concurrent isolated parse subprocesses. anyio defaults this to
+  # os.cpu_count(), which is decoupled from both worker concurrency and the pod
+  # memory limit — on an 8-core node that permits 8 x parseMemLimitMb of address
+  # space inside the pod. Bound it explicitly; raise only with headroom to spare.
+  parseProcessSlots: 2
   # Max vector graphics per PDF before the parser bails (pymupdf path).
   pdfGraphicsLimit: 1000
   # Pre-parse size cap (MB): PDFs larger than this fail fast with reason
