@@ -20,6 +20,8 @@
         },
         "parseTimeoutSeconds": { "type": "number", "minimum": 1 },
         "parseMemLimitMb": { "type": "integer", "minimum": 128 },
+        "parsePageWindow": { "type": "integer", "minimum": 0 },
+        "parseProcessSlots": { "type": "integer", "minimum": 1 },
         "pdfGraphicsLimit": { "type": "integer", "minimum": 1 },
         "maxPdfSizeMb": { "type": "number", "minimum": 0 },
         "ocr": {
