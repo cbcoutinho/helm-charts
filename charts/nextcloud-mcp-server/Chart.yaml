@@ -3,7 +3,7 @@ name: nextcloud-mcp-server
 description: A Helm chart for deploying Nextcloud MCP Server - enables AI assistants to interact with Nextcloud
 type: application
 version: 0.99.1
-appVersion: "0.141.3"
+appVersion: "0.141.4"
 # policy/v1 (PodDisruptionBudget) was promoted in Kubernetes 1.21.
 kubeVersion: ">=1.21.0-0"
 keywords:
