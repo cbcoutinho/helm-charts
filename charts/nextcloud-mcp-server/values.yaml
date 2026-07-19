@@ -805,6 +805,38 @@ documentPipeline:
   parseProcessSlots: 2
   # Max vector graphics per PDF before the parser bails (pymupdf path).
   pdfGraphicsLimit: 1000
+  # Page ceiling for the structured tier's markdown reconstruction. Above it,
+  # pymupdf4llm.to_markdown is skipped and the raw text layer is returned
+  # instead. 0 disables markdown entirely (every document takes the raw-text
+  # path). A negative value is rejected at startup.
+  #
+  # to_markdown is SUPERLINEAR in page count -- the per-page rate itself grows
+  # with document size. Measured on an 866-file scanned corpus: ~0.5-1.5 s/page
+  # at 22-31 pages, ~1.0 s/page at 400, 3.1 s/page at 1898, and 5.9 s/page at
+  # 4003 (6.6 hours for one document). Raw text extraction is ~4.5 ms/page and
+  # flat. Without a ceiling a large document burns the whole
+  # parseTimeoutSeconds and dead-letters reason="timeout", discarding a text
+  # layer that was extractable in under a second.
+  #
+  # Expressed in PAGES, not seconds, on purpose: seconds depend on node CPU, so
+  # a seconds-based threshold drifts between node types. Size it against the
+  # tier's real budget -- at ~1 s/page on a throttled 2-core pod, a 120 s
+  # parseTimeoutSeconds is roughly 120 pages. Lower it if structured-tier
+  # timeouts persist; raise it only where markdown's table/heading structure
+  # actually earns the wall-clock (prose and digitally-authored PDFs, not scans).
+  #
+  # Above the ceiling no images are written either -- markdown reconstruction is
+  # what emits them -- so has_images is false for a gated document.
+  #
+  # REQUIRES app >= 0.141.2. It renders into settings.toml and is silently
+  # ignored on earlier versions, so the pod looks gated while every large
+  # document still runs to_markdown to the timeout.
+  #
+  # NOTE: this value is part of the app's escalation-tier signature, which keys
+  # the document dead-letter marker. Changing it makes ALL dead letters on the
+  # tenant retryable (not just timeout ones) -- a thundering herd on a large
+  # tenant. Roll it out one tenant at a time and watch ingest queue depth.
+  markdownMaxPages: 150
   # Pre-parse size cap (MB): PDFs larger than this fail fast with reason
   # "oversize" instead of burning the parse/OCR timeout to 0 chars on a
   # pathological file. 0 disables the guard.
