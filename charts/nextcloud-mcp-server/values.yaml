@@ -809,7 +809,12 @@ documentPipeline:
   # "oversize" instead of burning the parse/OCR timeout to 0 chars on a
   # pathological file. 0 disables the guard.
   #
-  # Since app 0.141.0 this is a DISK argument, not a memory one: the download is
+  # REQUIRES app >= 0.141.1. On 0.141.0 and earlier the ingest path buffers the
+  # whole document (webdav.read_file), so this cap is the ONLY bound on resident
+  # memory -- raising it there OOMKills the worker instead of protecting it.
+  # Check Chart.yaml appVersion before raising this above ~50.
+  #
+  # From app 0.141.1 this is a DISK argument, not a memory one: the download is
   # streamed to a spool file (one chunk resident) and extraction is windowed
   # (O(window), independent of file size and page count). Size it against the
   # spool volume: roughly spoolVolumeSize / worker concurrency.
@@ -820,6 +825,10 @@ documentPipeline:
   # Set false ONLY as an escape hatch from a streaming-specific bug -- the
   # buffered path is the higher-memory one, so it is not a safe fallback under
   # memory pressure.
+  #
+  # REQUIRES app >= 0.141.1. Nothing reads this setting on 0.141.0 or earlier:
+  # it renders into settings.toml and is silently ignored, so the pod looks
+  # configured for streaming while still buffering every document.
   streamDownloadEnabled: true
   # Directory for ingest spool files. Pinned explicitly rather than left to the
   # system temp dir: the worker's startup sweep for orphaned spools only scans
