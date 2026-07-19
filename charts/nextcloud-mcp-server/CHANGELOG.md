@@ -14,6 +14,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable resource limits
 - Grafana dashboard annotations
 
+## nextcloud-mcp-server-0.98.0 (2026-07-19)
+
+### Feat
+
+- expose ingest spool settings and bound the worker's tmp volume
+
+### Fix
+
+- treat /tmp as a normal coverage candidate in validateSpoolDir
+- make the spoolDir mount check path-boundary aware
+- fail fast when spoolDir has no writable volume behind it
+- bound the API pod's spool volume too, and correct the quantity pattern
+
 ## nextcloud-mcp-server-0.97.0 (2026-07-18)
 
 ### Feat

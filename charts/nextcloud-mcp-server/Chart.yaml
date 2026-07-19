@@ -2,7 +2,7 @@ apiVersion: v2
 name: nextcloud-mcp-server
 description: A Helm chart for deploying Nextcloud MCP Server - enables AI assistants to interact with Nextcloud
 type: application
-version: 0.97.0
+version: 0.98.0
 appVersion: "0.141.0"
 # policy/v1 (PodDisruptionBudget) was promoted in Kubernetes 1.21.
 kubeVersion: ">=1.21.0-0"
@@ -29,8 +29,16 @@ annotations:
   grafana_dashboard: "true"
   grafana_dashboard_folder: "Nextcloud MCP"
   artifacthub.io/changes: |
+    - kind: fixed
+      description: "treat /tmp as a normal coverage candidate in validateSpoolDir"
+    - kind: fixed
+      description: "make the spoolDir mount check path-boundary aware"
+    - kind: fixed
+      description: "fail fast when spoolDir has no writable volume behind it"
+    - kind: fixed
+      description: "bound the API pod's spool volume too, and correct the quantity pattern"
     - kind: added
-      description: "expose PDF parse memory bounds from nextcloud-mcp-server 0.141.0"
+      description: "expose ingest spool settings and bound the worker's tmp volume"
 dependencies:
   - name: qdrant
     version: "1.18.2"
