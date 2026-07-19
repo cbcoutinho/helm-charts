@@ -35,3 +35,14 @@ tests:
       - matchRegex:
           path: data["settings.toml"]
           pattern: 'DOCUMENT_MARKDOWN_MAX_PAGES = 0'
+
+  # 0 disables markdown; a NEGATIVE is a typo, and one that would otherwise be
+  # indistinguishable from the disable sentinel at runtime. The schema's
+  # `minimum: 0` catches it at template time -- ahead of the app's own startup
+  # validator -- so the operator never gets a pod that silently ran markdown-free
+  # because of a stray minus sign.
+  - it: rejects a negative markdownMaxPages
+    set:
+      documentPipeline.markdownMaxPages: -1
+    asserts:
+      - failedTemplate: {}
