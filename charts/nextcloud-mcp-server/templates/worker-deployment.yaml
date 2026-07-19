@@ -143,8 +143,8 @@ spec:
             {{- toYaml . | nindent 12 }}
             {{- end }}
       volumes:
-        - name: tmp
-          emptyDir: {}
+        {{- include "nextcloud-mcp-server.validateSpoolDir" $ }}
+        {{- include "nextcloud-mcp-server.spoolVolume" $ | nindent 8 }}
         # The worker uses DATABASE_URL for both the queue and stored app
         # passwords; /app/data is just a writable mount for the read-only rootfs.
         - name: data-storage

@@ -808,7 +808,40 @@ documentPipeline:
   # Pre-parse size cap (MB): PDFs larger than this fail fast with reason
   # "oversize" instead of burning the parse/OCR timeout to 0 chars on a
   # pathological file. 0 disables the guard.
+  #
+  # Since app 0.141.0 this is a DISK argument, not a memory one: the download is
+  # streamed to a spool file (one chunk resident) and extraction is windowed
+  # (O(window), independent of file size and page count). Size it against the
+  # spool volume: roughly spoolVolumeSize / worker concurrency.
   maxPdfSizeMb: 50
+  # Stream ingest downloads to a spool file instead of buffering the whole
+  # response in memory. Buffering held the entire document (a 1040 MB file cost
+  # ~1.1 GB resident before a page was read); streaming keeps that at one chunk.
+  # Set false ONLY as an escape hatch from a streaming-specific bug -- the
+  # buffered path is the higher-memory one, so it is not a safe fallback under
+  # memory pressure.
+  streamDownloadEnabled: true
+  # Directory for ingest spool files. Pinned explicitly rather than left to the
+  # system temp dir: the worker's startup sweep for orphaned spools only scans
+  # this path, so an implicit value that drifts (e.g. via TMPDIR) would leave
+  # leaked documents uncollected.
+  #
+  # /tmp is the only writable volume this chart mounts, and the pods run with
+  # readOnlyRootFilesystem: true. /tmp stays mounted there regardless of this
+  # value -- the app also uses the system temp dir for pdf-image extraction,
+  # bbox/highlight scratch and the ephemeral token DB -- so pointing spoolDir
+  # elsewhere is a BRING-YOUR-OWN-VOLUME feature: supply a volume + volumeMount
+  # covering it via .Values.volumes / .Values.volumeMounts. The chart fails at
+  # template time if you set a path nothing mounts, rather than letting every
+  # spool write fail at runtime.
+  spoolDir: /tmp
+  # Size limit for the worker's /tmp emptyDir, which backs the spool directory.
+  # That emptyDir lives on the node's root filesystem, shared with container
+  # images, logs and other pods' scratch, so an unbounded spool competes with
+  # the kubelet itself. Must exceed (worker concurrency x maxPdfSizeMb) with
+  # headroom; raise it in the same change that raises maxPdfSizeMb.
+  # Empty string leaves the volume unbounded (previous behaviour).
+  spoolSizeLimit: 2Gi
   # OCR escalation for scanned / no-text-layer PDFs. A single configurable OCR
   # tier: pick the backend (gateway vs direct Mistral) and model below. Off by
   # default; when off the structured tier is terminal.

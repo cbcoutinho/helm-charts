@@ -289,6 +289,66 @@ If not specified:
 {{- end }}
 
 {{/*
+Fail fast when documentPipeline.spoolDir has no writable mount behind it.
+
+The chart mounts one writable volume, at /tmp, and both pods run with
+readOnlyRootFilesystem: true. /tmp must stay mounted there regardless of
+spoolDir -- the app also uses tempfile.gettempdir() for pdf-image extraction,
+bbox/highlight scratch dirs and the ephemeral token DB, so relocating that mount
+to follow spoolDir would break those instead.
+
+So a custom spoolDir is a bring-your-own-volume feature: the user supplies a
+volume + volumeMount covering it via .Values.volumes/.Values.volumeMounts.
+Without one, every spool write fails against the read-only rootfs at runtime.
+Catch it at template time with an actionable message instead.
+*/}}
+{{- define "nextcloud-mcp-server.validateSpoolDir" -}}
+{{- $spool := trimSuffix "/" .Values.documentPipeline.spoolDir -}}
+{{- /* Candidates: the chart's own always-mounted /tmp, plus any extra mounts
+       the user supplied. Seeding /tmp here rather than special-casing it keeps
+       ONE comparison for every candidate -- an exact-match special case missed
+       subdirectories of /tmp, which are covered and writable. */ -}}
+{{- $mounts := list "/tmp" -}}
+{{- range .Values.volumeMounts -}}
+  {{- $mounts = append $mounts .mountPath -}}
+{{- end -}}
+{{- $covered := false -}}
+{{- range $mounts -}}
+  {{- /* Path-boundary comparison, not a raw string prefix: a mount at /data
+         must not "cover" a spoolDir of /database. Trailing slashes trimmed so
+         `/spool/` and `/spool` behave identically. */ -}}
+  {{- $mount := trimSuffix "/" . -}}
+  {{- if or (eq $mount $spool) (hasPrefix (printf "%s/" $mount) (printf "%s/" $spool)) -}}
+    {{- $covered = true -}}
+  {{- end -}}
+{{- end -}}
+{{- if not $covered -}}
+  {{- fail (printf "documentPipeline.spoolDir is %s but no volumeMount covers it. The chart only mounts a writable volume at /tmp and the pods run with readOnlyRootFilesystem, so spool writes would fail at runtime. Either point spoolDir at /tmp (or a path under it), or add a volume + volumeMount covering %s via .Values.volumes and .Values.volumeMounts." $spool $spool) -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+The /tmp volume, which backs the ingest spool (documentPipeline.spoolDir).
+
+Used by BOTH the api and ingest-worker pods: with ingest.splitWorker false (the
+default) the API pod processes documents in-process and spools to its own /tmp,
+so bounding only the worker would leave the default topology unbounded.
+
+This emptyDir lives on the node's root filesystem, shared with container images,
+logs and other pods' scratch, so an unbounded spool competes with the kubelet
+itself. An empty spoolSizeLimit preserves the previous unbounded behaviour.
+*/}}
+{{- define "nextcloud-mcp-server.spoolVolume" -}}
+- name: tmp
+  {{- with .Values.documentPipeline.spoolSizeLimit }}
+  emptyDir:
+    sizeLimit: {{ . }}
+  {{- else }}
+  emptyDir: {}
+  {{- end }}
+{{- end -}}
+
+{{/*
 Settings volume + mount for the generated dynaconf settings.toml ConfigMap.
 Always rendered unconditionally (no call-site guard) — the ConfigMap always
 exists and both the api and ingest-worker pods always mount it.

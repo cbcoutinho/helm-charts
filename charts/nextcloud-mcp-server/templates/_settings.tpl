@@ -58,6 +58,8 @@ DOCUMENT_PARSE_PAGE_WINDOW = {{ .Values.documentPipeline.parsePageWindow }}
 DOCUMENT_PARSE_PROCESS_SLOTS = {{ .Values.documentPipeline.parseProcessSlots }}
 DOCUMENT_PDF_GRAPHICS_LIMIT = {{ .Values.documentPipeline.pdfGraphicsLimit }}
 DOCUMENT_MAX_PDF_SIZE_MB = {{ .Values.documentPipeline.maxPdfSizeMb }}
+DOCUMENT_STREAM_DOWNLOAD_ENABLED = {{ .Values.documentPipeline.streamDownloadEnabled }}
+DOCUMENT_SPOOL_DIR = {{ .Values.documentPipeline.spoolDir | quote }}
 DOCUMENT_OCR_ENABLED = {{ .Values.documentPipeline.ocr.enabled }}
 {{- if .Values.documentPipeline.ocr.enabled }}
 DOCUMENT_OCR_PROVIDER = {{ .Values.documentPipeline.ocr.provider | quote }}

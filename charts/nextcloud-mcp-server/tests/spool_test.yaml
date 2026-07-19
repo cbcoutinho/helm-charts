@@ -1,0 +1,221 @@
+suite: ingest spool volume + spoolDir validation
+#
+# Every case here is a regression guard for a defect found by review on PR #154.
+# All of them are template-time bugs -- they render wrong (or render when they
+# should fail), with no cluster involved. `helm test` hooks could not catch any
+# of them, which is why this suite is helm-unittest and not a test-hook Pod.
+#
+templates:
+  - templates/deployment.yaml
+  - templates/worker-deployment.yaml
+  - templates/settings-configmap.yaml
+  # Not asserted on, but both Deployments include it to compute a
+  # checksum/config annotation, so it must be loaded for them to render.
+  - templates/secret.yaml
+
+tests:
+  # --- Round 1: the default topology was left unbounded -------------------
+  # ingest.splitWorker defaults to FALSE, so the API pod is what processes
+  # documents and spools to its own /tmp. Bounding only the worker (the
+  # non-default topology) left every default install unbounded.
+  - it: bounds the API pod's spool emptyDir by default
+    template: templates/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes[?(@.name=="tmp")].emptyDir.sizeLimit
+          value: 2Gi
+
+  - it: bounds the ingest-worker pod's spool emptyDir when split out
+    template: templates/worker-deployment.yaml
+    set:
+      ingest.splitWorker: true
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes[?(@.name=="tmp")].emptyDir.sizeLimit
+          value: 2Gi
+
+  # An empty string is the documented opt-out, and must render a VALID
+  # `emptyDir: {}` rather than `sizeLimit: null`.
+  - it: leaves the spool unbounded when spoolSizeLimit is empty
+    template: templates/deployment.yaml
+    set:
+      documentPipeline.spoolSizeLimit: ""
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes[?(@.name=="tmp")].emptyDir
+          value: {}
+
+  # --- Rounds 3 & 4: spoolDir coverage checking --------------------------
+  - it: accepts the default spoolDir of /tmp
+    template: templates/deployment.yaml
+    asserts:
+      - hasDocuments:
+          count: 1
+
+  # Round 4: an exact-match special case rejected subdirectories of /tmp,
+  # which are covered by the /tmp mount and perfectly writable.
+  - it: accepts a spoolDir under the chart's own /tmp mount
+    template: templates/deployment.yaml
+    set:
+      documentPipeline.spoolDir: /tmp/spool
+    asserts:
+      - hasDocuments:
+          count: 1
+
+  - it: accepts a spoolDir covered by a user-supplied volumeMount
+    template: templates/deployment.yaml
+    set:
+      documentPipeline.spoolDir: /spool
+      volumes:
+        - name: spool
+          emptyDir:
+            sizeLimit: 10Gi
+      volumeMounts:
+        - name: spool
+          mountPath: /spool
+    asserts:
+      - hasDocuments:
+          count: 1
+
+  - it: accepts a spoolDir nested under a user-supplied volumeMount
+    template: templates/deployment.yaml
+    set:
+      documentPipeline.spoolDir: /spool/ingest
+      volumes:
+        - name: spool
+          emptyDir: {}
+      volumeMounts:
+        - name: spool
+          mountPath: /spool
+    asserts:
+      - hasDocuments:
+          count: 1
+
+  # Round 3: `hasPrefix` on raw strings made a /data mount "cover" /database.
+  # This is the case that proves the comparison is path-boundary aware.
+  - it: rejects a spoolDir that merely shares a string prefix with a mount
+    template: templates/deployment.yaml
+    set:
+      documentPipeline.spoolDir: /database
+      volumes:
+        - name: data
+          emptyDir: {}
+      volumeMounts:
+        - name: data
+          mountPath: /data
+    asserts:
+      - failedTemplate:
+          errorMessage: "documentPipeline.spoolDir is /database but no volumeMount covers it. The chart only mounts a writable volume at /tmp and the pods run with readOnlyRootFilesystem, so spool writes would fail at runtime. Either point spoolDir at /tmp (or a path under it), or add a volume + volumeMount covering /database via .Values.volumes and .Values.volumeMounts."
+
+  # The same boundary bug, one character from the default mount.
+  - it: rejects /tmpfoo, which is not under /tmp
+    template: templates/deployment.yaml
+    set:
+      documentPipeline.spoolDir: /tmpfoo
+    asserts:
+      - failedTemplate: {}
+
+  - it: rejects an uncovered spoolDir on the read-only rootfs
+    template: templates/deployment.yaml
+    set:
+      documentPipeline.spoolDir: /var/spool
+    asserts:
+      - failedTemplate: {}
+
+  # A mount written with a trailing slash must behave identically.
+  - it: treats a trailing-slash mountPath as covering the spoolDir
+    template: templates/deployment.yaml
+    set:
+      documentPipeline.spoolDir: /spool
+      volumes:
+        - name: spool
+          emptyDir: {}
+      volumeMounts:
+        - name: spool
+          mountPath: /spool/
+    asserts:
+      - hasDocuments:
+          count: 1
+
+  # The guard must fire from the worker pod too, not just the API pod --
+  # worker-deployment.yaml passes `$` rather than `.` because the tier range
+  # rebinds `.`, and getting that wrong silently skips validation.
+  - it: validates spoolDir from the ingest-worker pod as well
+    template: templates/worker-deployment.yaml
+    set:
+      ingest.splitWorker: true
+      documentPipeline.spoolDir: /var/spool
+    asserts:
+      - failedTemplate: {}
+
+  # --- Round 2: quantity suffix validation --------------------------------
+  # Kubernetes resource.Quantity uses lowercase `k` for decimal-SI kilo and
+  # capitalised Ki/Mi/Gi/... for binary-SI. The schema originally accepted an
+  # uppercase `K`, which the API server rejects at apply time -- i.e. the chart
+  # would render fine and fail on the cluster.
+  - it: rejects an uppercase K quantity suffix
+    template: templates/deployment.yaml
+    set:
+      documentPipeline.spoolSizeLimit: 500K
+    asserts:
+      - failedTemplate: {}
+
+  - it: accepts the valid quantity suffixes
+    template: templates/deployment.yaml
+    set:
+      documentPipeline.spoolSizeLimit: 500k
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes[?(@.name=="tmp")].emptyDir.sizeLimit
+          value: 500k
+
+  - it: accepts a binary-SI quantity suffix
+    template: templates/deployment.yaml
+    set:
+      documentPipeline.spoolSizeLimit: 10Gi
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes[?(@.name=="tmp")].emptyDir.sizeLimit
+          value: 10Gi
+
+  - it: rejects a quantity with a bogus suffix
+    template: templates/deployment.yaml
+    set:
+      documentPipeline.spoolSizeLimit: 2GB
+    asserts:
+      - failedTemplate: {}
+
+  # --- settings.toml wiring ----------------------------------------------
+  - it: emits the spool settings the app reads
+    template: templates/settings-configmap.yaml
+    asserts:
+      # Bare bool, not a quoted string -- dynaconf would read "true" as a str.
+      - matchRegex:
+          path: data["settings.toml"]
+          pattern: 'DOCUMENT_STREAM_DOWNLOAD_ENABLED = true'
+      - matchRegex:
+          path: data["settings.toml"]
+          pattern: 'DOCUMENT_SPOOL_DIR = "/tmp"'
+      # spoolSizeLimit is infra-level (the emptyDir bound) and deliberately
+      # NOT surfaced to the app.
+      - notMatchRegex:
+          path: data["settings.toml"]
+          pattern: 'SPOOL_SIZE_LIMIT'
+
+  - it: propagates a custom spoolDir to settings.toml
+    template: templates/settings-configmap.yaml
+    set:
+      documentPipeline.spoolDir: /tmp/spool
+    asserts:
+      - matchRegex:
+          path: data["settings.toml"]
+          pattern: 'DOCUMENT_SPOOL_DIR = "/tmp/spool"'
+
+  - it: allows disabling streaming downloads for rollback
+    template: templates/settings-configmap.yaml
+    set:
+      documentPipeline.streamDownloadEnabled: false
+    asserts:
+      - matchRegex:
+          path: data["settings.toml"]
+          pattern: 'DOCUMENT_STREAM_DOWNLOAD_ENABLED = false'

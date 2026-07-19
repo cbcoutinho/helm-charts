@@ -1,0 +1,56 @@
+name: Lint and Test Charts
+
+on:
+  pull_request:
+    paths:
+      - "charts/**"
+      - ".github/workflows/helm-test.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "charts/**"
+
+jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Install Helm
+        uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
+        with:
+          version: v4.2.3
+
+      - name: Install helm-unittest
+        # Pinned: an unpinned plugin install would silently change the meaning
+        # of a required check. --verify=false because this plugin publishes no
+        # provenance signature.
+        run: helm plugin install https://github.com/helm-unittest/helm-unittest --version v1.1.1 --verify=false
+
+      # Same repo-registration logic as helm-release.yml: `helm dependency build`
+      # needs every Chart.yaml repository registered by name first, and a bare
+      # runner has none.
+      - name: Build chart dependencies
+        run: |
+          chart_dir=charts/nextcloud-mcp-server
+
+          yq '.dependencies[].repository | select(. != null)' "$chart_dir/Chart.yaml" | sort -u | while read -r repo_url; do
+            [ -z "$repo_url" ] && continue
+            repo_name=$(echo "$repo_url" | sed 's|[^a-zA-Z0-9]|-|g')
+            helm repo add "$repo_name" "$repo_url" 2>/dev/null || true
+          done
+
+          helm dependency build "$chart_dir"
+
+      - name: Lint
+        run: helm lint charts/nextcloud-mcp-server
+
+      # Renders against values.schema.json, so a values/schema mismatch fails
+      # here rather than at `helm upgrade` time in a cluster.
+      - name: Template (default values)
+        run: helm template rel charts/nextcloud-mcp-server >/dev/null
+
+      - name: Unit tests
+        run: helm unittest charts/nextcloud-mcp-server
