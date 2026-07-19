@@ -4,6 +4,51 @@ entries:
   - annotations:
       artifacthub.io/changes: |
         - kind: changed
+          description: "Bump helm chart app version"
+      grafana_dashboard: "true"
+      grafana_dashboard_folder: Nextcloud MCP
+    apiVersion: v2
+    appVersion: 0.142.0
+    created: "2026-07-19T23:02:26.866303553Z"
+    dependencies:
+    - condition: qdrant.networkMode.deploySubchart
+      name: qdrant
+      repository: https://qdrant.github.io/qdrant-helm
+      version: 1.18.2
+    - condition: ollama.enabled
+      name: ollama
+      repository: https://otwld.github.io/ollama-helm
+      version: 1.67.0
+    description: A Helm chart for deploying Nextcloud MCP Server - enables AI assistants
+      to interact with Nextcloud
+    digest: 84eeae2c10d83e3fcaf17816dddeb7e6241633fdfdf5a96b1acd39c9dee759bb
+    home: https://github.com/cbcoutinho/nextcloud-mcp-server
+    icon: https://raw.githubusercontent.com/nextcloud/server/master/core/img/logo/logo.svg
+    keywords:
+    - nextcloud
+    - mcp
+    - model-context-protocol
+    - llm
+    - ai
+    - claude
+    - webdav
+    - caldav
+    - carddav
+    - helm
+    kubeVersion: '>=1.21.0-0'
+    maintainers:
+    - email: chris@coutinho.io
+      name: Chris Coutinho
+    name: nextcloud-mcp-server
+    sources:
+    - https://github.com/cbcoutinho/nextcloud-mcp-server
+    type: application
+    urls:
+    - https://github.com/cbcoutinho/helm-charts/releases/download/nextcloud-mcp-server-0.99.3/nextcloud-mcp-server-0.99.3.tgz
+    version: 0.99.3
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: changed
           description: "update ghcr.io/cbcoutinho/nextcloud-mcp-server docker tag to v0.141.4"
         - kind: changed
           description: "update anthropics/claude-code-action action to v1.0.178"
@@ -5812,4 +5857,4 @@ entries:
     urls:
     - https://github.com/cbcoutinho/helm-charts/releases/download/nextcloud-mcp-server-0.59.1/nextcloud-mcp-server-0.59.1.tgz
     version: 0.59.1
-generated: "2026-07-19T13:40:14.827795701Z"
+generated: "2026-07-19T23:02:26.867129695Z"
