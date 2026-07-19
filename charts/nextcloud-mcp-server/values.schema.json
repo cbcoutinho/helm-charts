@@ -23,6 +23,7 @@
         "parsePageWindow": { "type": "integer", "minimum": 0 },
         "parseProcessSlots": { "type": "integer", "minimum": 1 },
         "pdfGraphicsLimit": { "type": "integer", "minimum": 1 },
+        "markdownMaxPages": { "type": "integer", "minimum": 0 },
         "maxPdfSizeMb": { "type": "number", "minimum": 0 },
         "streamDownloadEnabled": { "type": "boolean" },
         "spoolDir": { "type": "string", "minLength": 1 },

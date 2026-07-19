@@ -1,0 +1,48 @@
+suite: structured-tier markdown page gate
+#
+# `documentPipeline.markdownMaxPages` gates pymupdf4llm.to_markdown in the app
+# (>= 0.141.2). All the chart owes it is a faithful passthrough into
+# settings.toml -- but 0 carries MEANING here ("never run markdown"), so a
+# well-intentioned `{{ if }}` around the line would silently drop the operator's
+# opt-out and leave the app on its 150-page default. These are template-time
+# guards for that class of regression.
+#
+templates:
+  - templates/settings-configmap.yaml
+
+tests:
+  - it: renders the default ceiling
+    asserts:
+      - matchRegex:
+          path: data["settings.toml"]
+          pattern: 'DOCUMENT_MARKDOWN_MAX_PAGES = 150'
+
+  - it: renders an operator override
+    set:
+      documentPipeline.markdownMaxPages: 40
+    asserts:
+      - matchRegex:
+          path: data["settings.toml"]
+          pattern: 'DOCUMENT_MARKDOWN_MAX_PAGES = 40'
+
+  # 0 is the documented "disable markdown entirely" sentinel, NOT an absent
+  # value: it must still render, or the app falls back to its own default and
+  # markdown silently stays on.
+  - it: still renders the line when markdown is disabled with 0
+    set:
+      documentPipeline.markdownMaxPages: 0
+    asserts:
+      - matchRegex:
+          path: data["settings.toml"]
+          pattern: 'DOCUMENT_MARKDOWN_MAX_PAGES = 0'
+
+  # 0 disables markdown; a NEGATIVE is a typo, and one that would otherwise be
+  # indistinguishable from the disable sentinel at runtime. The schema's
+  # `minimum: 0` catches it at template time -- ahead of the app's own startup
+  # validator -- so the operator never gets a pod that silently ran markdown-free
+  # because of a stray minus sign.
+  - it: rejects a negative markdownMaxPages
+    set:
+      documentPipeline.markdownMaxPages: -1
+    asserts:
+      - failedTemplate: {}

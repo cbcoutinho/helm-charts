@@ -382,6 +382,7 @@ OCR backend selection is independent of the embedding provider — you can embed
 | `documentPipeline.parsePageWindow` | Pages per pypdfium2 extraction window; bounds peak RSS on page-heavy PDFs; `0` disables windowing | `100` |
 | `documentPipeline.parseProcessSlots` | Max concurrent isolated parse subprocesses (otherwise `os.cpu_count()`) | `2` |
 | `documentPipeline.pdfGraphicsLimit` | Max vector graphics per PDF before bailing (pymupdf path) | `1000` |
+| `documentPipeline.markdownMaxPages` | Page ceiling for structured-tier markdown reconstruction; above it the raw text layer is returned instead (`to_markdown` is superlinear in page count and otherwise burns the whole timeout); `0` disables markdown. Requires app >= 0.141.2 | `150` |
 | `documentPipeline.maxPdfSizeMb` | Pre-parse size cap (MB); larger PDFs fail fast (`oversize`) instead of burning the timeout; `0` disables | `50` |
 | `documentPipeline.streamDownloadEnabled` | Stream document downloads to a spool file instead of buffering the whole body in memory | `true` |
 | `documentPipeline.spoolDir` | Directory the ingest spool writes to. Anything other than `/tmp` (or a path under it) is bring-your-own-volume: you must add a `volumes`/`volumeMounts` pair covering it, or the chart fails to render | `/tmp` |

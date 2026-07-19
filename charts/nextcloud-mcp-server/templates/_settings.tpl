@@ -57,6 +57,7 @@ DOCUMENT_PARSE_MEM_LIMIT_MB = {{ .Values.documentPipeline.parseMemLimitMb }}
 DOCUMENT_PARSE_PAGE_WINDOW = {{ .Values.documentPipeline.parsePageWindow }}
 DOCUMENT_PARSE_PROCESS_SLOTS = {{ .Values.documentPipeline.parseProcessSlots }}
 DOCUMENT_PDF_GRAPHICS_LIMIT = {{ .Values.documentPipeline.pdfGraphicsLimit }}
+DOCUMENT_MARKDOWN_MAX_PAGES = {{ .Values.documentPipeline.markdownMaxPages }}
 DOCUMENT_MAX_PDF_SIZE_MB = {{ .Values.documentPipeline.maxPdfSizeMb }}
 DOCUMENT_STREAM_DOWNLOAD_ENABLED = {{ .Values.documentPipeline.streamDownloadEnabled }}
 DOCUMENT_SPOOL_DIR = {{ .Values.documentPipeline.spoolDir | quote }}
