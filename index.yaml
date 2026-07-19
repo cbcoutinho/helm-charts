@@ -3,6 +3,59 @@ entries:
   nextcloud-mcp-server:
   - annotations:
       artifacthub.io/changes: |
+        - kind: fixed
+          description: "treat /tmp as a normal coverage candidate in validateSpoolDir"
+        - kind: fixed
+          description: "make the spoolDir mount check path-boundary aware"
+        - kind: fixed
+          description: "fail fast when spoolDir has no writable volume behind it"
+        - kind: fixed
+          description: "bound the API pod's spool volume too, and correct the quantity pattern"
+        - kind: added
+          description: "expose ingest spool settings and bound the worker's tmp volume"
+      grafana_dashboard: "true"
+      grafana_dashboard_folder: Nextcloud MCP
+    apiVersion: v2
+    appVersion: 0.141.0
+    created: "2026-07-19T00:17:09.004619386Z"
+    dependencies:
+    - condition: qdrant.networkMode.deploySubchart
+      name: qdrant
+      repository: https://qdrant.github.io/qdrant-helm
+      version: 1.18.2
+    - condition: ollama.enabled
+      name: ollama
+      repository: https://otwld.github.io/ollama-helm
+      version: 1.67.0
+    description: A Helm chart for deploying Nextcloud MCP Server - enables AI assistants
+      to interact with Nextcloud
+    digest: 68a8b1b3fa16c1cc88b90f53a4fe86643cdaf81d1f5527e2af1befe798ebc4f6
+    home: https://github.com/cbcoutinho/nextcloud-mcp-server
+    icon: https://raw.githubusercontent.com/nextcloud/server/master/core/img/logo/logo.svg
+    keywords:
+    - nextcloud
+    - mcp
+    - model-context-protocol
+    - llm
+    - ai
+    - claude
+    - webdav
+    - caldav
+    - carddav
+    - helm
+    kubeVersion: '>=1.21.0-0'
+    maintainers:
+    - email: chris@coutinho.io
+      name: Chris Coutinho
+    name: nextcloud-mcp-server
+    sources:
+    - https://github.com/cbcoutinho/nextcloud-mcp-server
+    type: application
+    urls:
+    - https://github.com/cbcoutinho/helm-charts/releases/download/nextcloud-mcp-server-0.98.0/nextcloud-mcp-server-0.98.0.tgz
+    version: 0.98.0
+  - annotations:
+      artifacthub.io/changes: |
         - kind: added
           description: "expose PDF parse memory bounds from nextcloud-mcp-server 0.141.0"
       grafana_dashboard: "true"
@@ -5577,4 +5630,4 @@ entries:
     urls:
     - https://github.com/cbcoutinho/helm-charts/releases/download/nextcloud-mcp-server-0.59.1/nextcloud-mcp-server-0.59.1.tgz
     version: 0.59.1
-generated: "2026-07-18T20:20:37.057841107Z"
+generated: "2026-07-19T00:17:09.004859187Z"
