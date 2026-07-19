@@ -379,7 +379,7 @@ OCR backend selection is independent of the embedding provider — you can embed
 | `documentPipeline.glyphCorruptionRatio` | Doc-level C0-control-char ratio above which a glyph-corrupt (broken `/ToUnicode`) text layer escalates `fast`→`structured` (pymupdf); `0` disables | `0.02` |
 | `documentPipeline.parseTimeoutSeconds` | Per-PDF parse timeout (seconds) | `120` |
 | `documentPipeline.parseMemLimitMb` | RLIMIT_AS memory cap for the parse subprocess (MB) | `1536` |
-| `documentPipeline.parsePageWindow` | Pages per pypdfium2 extraction window; bounds peak RSS on page-heavy PDFs; `0` disables windowing | `100` |
+| `documentPipeline.parsePageWindow` | Pages per window for both page-walking passes — pypdfium2 text extraction and (since app 0.141.3) pymupdf chunk-bbox computation; bounds peak RSS on page-heavy PDFs; `0` disables windowing | `100` |
 | `documentPipeline.parseProcessSlots` | Max concurrent isolated parse subprocesses (otherwise `os.cpu_count()`) | `2` |
 | `documentPipeline.pdfGraphicsLimit` | Max vector graphics per PDF before bailing (pymupdf path) | `1000` |
 | `documentPipeline.markdownMaxPages` | Page ceiling for structured-tier markdown reconstruction; above it the raw text layer is returned instead (`to_markdown` is superlinear in page count and otherwise burns the whole timeout); `0` disables markdown. Requires app >= 0.141.2 | `150` |

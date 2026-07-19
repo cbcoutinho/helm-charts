@@ -791,12 +791,22 @@ documentPipeline:
   # RLIMIT_AS memory cap (MB) applied in the parse subprocess. Keep below the
   # pod memory limit.
   parseMemLimitMb: 1536
-  # Pages per pypdfium2 extraction window. PDFium retains parsed page objects for
-  # the document's lifetime (~0.5 MB/page) and page.close() does not give them
-  # back, so extracting a large document in one open scales peak RSS with page
-  # count (a 4003-page file cost ~1900 MB). Re-opening every N pages caps that at
-  # one window's worth, with byte-identical output. 0 disables windowing
-  # (single open, pre-0.141 behaviour).
+  # Pages per window for BOTH page-walking passes over a PDF. Since app 0.141.3
+  # this governs two stages, not one:
+  #
+  #   1. pypdfium2 text extraction -- PDFium retains parsed page objects for the
+  #      document's lifetime (~0.5 MB/page) and page.close() does not give them
+  #      back, so a 4003-page file cost ~1900 MB in one open.
+  #   2. pymupdf chunk-bbox computation -- MuPDF retains pages the same way
+  #      (~0.15 MB/page); the same 4003-page file cost +353 MB unwindowed vs
+  #      +53 MB windowed (process peak 685 MB -> 359 MB).
+  #
+  # Stage 2 was the one still OOMKilling fast-tier ingest workers after stage 1
+  # was fixed: peak tracks PAGE COUNT, not bytes, so raising maxPdfSizeMb is what
+  # exposes it. Both re-open every N pages, capping retention at one window's
+  # worth with byte-identical output.
+  #
+  # 0 disables windowing for both (single open each, pre-0.141 behaviour).
   parsePageWindow: 100
   # Max concurrent isolated parse subprocesses. anyio defaults this to
   # os.cpu_count(), which is decoupled from both worker concurrency and the pod
