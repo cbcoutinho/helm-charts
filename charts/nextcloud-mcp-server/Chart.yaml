@@ -2,7 +2,7 @@ apiVersion: v2
 name: nextcloud-mcp-server
 description: A Helm chart for deploying Nextcloud MCP Server - enables AI assistants to interact with Nextcloud
 type: application
-version: 0.99.3
+version: 0.99.4
 appVersion: "0.143.1"
 # policy/v1 (PodDisruptionBudget) was promoted in Kubernetes 1.21.
 kubeVersion: ">=1.21.0-0"
@@ -30,7 +30,11 @@ annotations:
   grafana_dashboard_folder: "Nextcloud MCP"
   artifacthub.io/changes: |
     - kind: changed
-      description: "Bump helm chart app version"
+      description: "update ghcr.io/cbcoutinho/nextcloud-mcp-server docker tag to v0.143.1"
+    - kind: changed
+      description: "update actions/checkout action to v7.0.1"
+    - kind: changed
+      description: "update actions/setup-python action to v7"
 dependencies:
   - name: qdrant
     version: "1.18.2"
