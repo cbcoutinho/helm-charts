@@ -1,0 +1,54 @@
+suite: optional document processors have no master switch
+#
+# App >= 0.151.0 removed ENABLE_DOCUMENT_PROCESSING; each processor registers
+# from its own ENABLE_* flag. The chart used to gate every processor behind
+# `documentProcessing.enabled`, so a user who enabled only `unstructured` got
+# nothing at all.
+#
+templates:
+  - templates/deployment.yaml
+  - templates/settings-configmap.yaml
+  - templates/secret.yaml
+
+tests:
+  - it: enables a processor without any master switch
+    template: templates/deployment.yaml
+    set:
+      documentProcessing.unstructured.enabled: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: ENABLE_UNSTRUCTURED
+            value: "true"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: DOCUMENT_PROCESSOR
+            value: "unstructured"
+
+  - it: never emits the removed ENABLE_DOCUMENT_PROCESSING
+    template: templates/deployment.yaml
+    set:
+      documentProcessing.enabled: true
+      documentProcessing.tesseract.enabled: true
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: ENABLE_DOCUMENT_PROCESSING
+          any: true
+
+  - it: omits processor settings when no processor is enabled
+    template: templates/deployment.yaml
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: DOCUMENT_PROCESSOR
+          any: true
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: PROGRESS_INTERVAL
+          any: true

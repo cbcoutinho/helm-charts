@@ -536,14 +536,16 @@ both pods stay in lock-step (Deck #183).
             - name: OIDC_DISCOVERY_URL
               value: {{ . | quote }}
             {{- end }}
-            {{- if .Values.documentProcessing.enabled }}
-            # Document processing
-            - name: ENABLE_DOCUMENT_PROCESSING
-              value: {{ .Values.documentProcessing.enabled | quote }}
+            {{- $dp := .Values.documentProcessing }}
+            {{- if or $dp.unstructured.enabled $dp.tesseract.enabled $dp.custom.enabled }}
+            # Document processing. App >= 0.151.0 has no master switch: each
+            # optional processor registers from its own ENABLE_* flag, so these
+            # are emitted whenever any one of them is on.
             - name: DOCUMENT_PROCESSOR
               value: {{ .Values.documentProcessing.defaultProcessor | quote }}
             - name: PROGRESS_INTERVAL
               value: {{ .Values.documentProcessing.progressInterval | quote }}
+            {{- end }}
             {{- if .Values.documentProcessing.unstructured.enabled }}
             - name: ENABLE_UNSTRUCTURED
               value: "true"
@@ -581,7 +583,6 @@ both pods stay in lock-step (Deck #183).
               value: {{ .Values.documentProcessing.custom.timeout | quote }}
             - name: CUSTOM_PROCESSOR_TYPES
               value: {{ .Values.documentProcessing.custom.types | quote }}
-            {{- end }}
             {{- end }}
             # Qdrant Vector Database
             {{- if eq .Values.qdrant.mode "network" }}

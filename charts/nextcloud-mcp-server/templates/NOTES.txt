@@ -81,10 +81,10 @@ Your Nextcloud MCP Server has been deployed in {{ .Values.auth.mode }} authentic
    IMPORTANT: Login Flow v2 is experimental. See ADR-022 for details.
 {{- end }}
 
-{{- if .Values.documentProcessing.enabled }}
+{{- $dp := .Values.documentProcessing }}
+{{- if or $dp.unstructured.enabled $dp.tesseract.enabled $dp.custom.enabled }}
 
 4. Document Processing:
-   - Enabled: {{ .Values.documentProcessing.enabled }}
    - Default processor: {{ .Values.documentProcessing.defaultProcessor }}
    {{- if .Values.documentProcessing.unstructured.enabled }}
    - Unstructured API: {{ .Values.documentProcessing.unstructured.apiUrl }}
