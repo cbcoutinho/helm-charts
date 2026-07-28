@@ -381,6 +381,29 @@ both pods stay in lock-step (Deck #183).
             # vars are injected as env below. env still overrides the file.
             - name: NEXTCLOUD_MCP_SETTINGS_FILE
               value: {{ printf "%s/settings.toml" (.Values.settings.mountPath | trimSuffix "/") | quote }}
+            # Pod identity via the downward API. One Tempo/Pyroscope stack
+            # aggregates every tenant, and traces + profiles carried no
+            # namespace at all, so a span or profile could not be attributed to
+            # a tenant. Metrics and logs already get `namespace` from the
+            # Prometheus/Loki Kubernetes service discovery; these make traces
+            # and profiles match that convention (Deck #48).
+            #
+            # OTEL_RESOURCE_ATTRIBUTES needs no application code: the OTel SDK's
+            # env resource detector folds it into the Resource, so EVERY span
+            # gets it -- including the background/ingest spans an HTTP
+            # middleware never sees. The profiler reads POD_NAMESPACE/POD_NAME
+            # directly (Alloy's pyroscope.receive_http cannot know which pod
+            # pushed to it, so the tags must come from the process itself).
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "k8s.namespace.name=$(POD_NAMESPACE),k8s.pod.name=$(POD_NAME)"
             {{- if or .Values.database.url .Values.database.existingSecret }}
             # Centralized database backend (ADR-026). DATABASE_URL is a SECRET
             # (the non-secret database.* config is in the generated settings.toml).
