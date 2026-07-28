@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable resource limits
 - Grafana dashboard annotations
 
+## nextcloud-mcp-server-0.100.0 (2026-07-28)
+
+### Feat
+
+- **nextcloud-mcp-server**: inject pod identity via the downward API
+
 ## nextcloud-mcp-server-0.99.7 (2026-07-26)
 
 ## nextcloud-mcp-server-0.99.6 (2026-07-22)
