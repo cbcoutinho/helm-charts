@@ -324,10 +324,14 @@ mcp:
   # Example: ["--log-level", "debug", "--enable-app", "notes"]
   extraArgs: []
 
-# Document processing configuration (optional)
+# Optional document processors (PDF, DOCX, images, etc.)
+#
+# There is no master switch: app >= 0.151.0 removed ENABLE_DOCUMENT_PROCESSING
+# and each processor below registers from its own ENABLE_* flag. Built-in PDF
+# extraction is always available; whether a read parses a document is the
+# caller's per-call choice (nc_webdav_read_file's parse_document argument).
+# `documentProcessing.enabled` is gone — enable the processors you want directly.
 documentProcessing:
-  # Enable document processing (PDF, DOCX, images, etc.)
-  enabled: false
   # Default processor: unstructured, tesseract, or custom
   defaultProcessor: "unstructured"
   # Progress reporting interval in seconds
@@ -768,9 +772,9 @@ documentChunking:
 # Tiered PDF extraction + OCR pipeline
 # Runs on the semantic-search / vector-ingestion path (applies whenever
 # semanticSearch.enabled is true and a PDF is indexed). This is SEPARATE from
-# the legacy `documentProcessing` block above (the unstructured/tesseract/custom
-# processors gated by ENABLE_DOCUMENT_PROCESSING) — enabling OCR here does NOT
-# require documentProcessing.enabled.
+# the optional `documentProcessing` processors above
+# (unstructured/tesseract/custom) — enabling OCR here does NOT require any of
+# those to be enabled.
 documentPipeline:
   # Fast-tier PDF engine: "pypdfium2" (default, permissive license) or
   # "pymupdf" (deprecated AGPL rollback escape hatch).

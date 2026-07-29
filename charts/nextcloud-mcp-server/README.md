@@ -220,9 +220,10 @@ The application exposes HTTP health check endpoints:
 
 #### Document Processing (Optional)
 
+There is no master switch — app `>= 0.151.0` removed `ENABLE_DOCUMENT_PROCESSING`, and each optional processor registers from its own `ENABLE_*` flag. Enable the processors you want directly; `documentProcessing.enabled` no longer exists.
+
 | Parameter | Description | Default |
 |-----------|-------------|---------|
-| `documentProcessing.enabled` | Enable document processing | `false` |
 | `documentProcessing.defaultProcessor` | Default processor | `unstructured` |
 | `documentProcessing.unstructured.enabled` | Enable Unstructured.io processor | `false` |
 | `documentProcessing.unstructured.apiUrl` | Unstructured API URL | `http://unstructured:8000` |
@@ -362,7 +363,7 @@ A first-class Mistral provider, distinct from the OpenAI-compatible path. `MISTR
 
 #### PDF Pipeline & OCR (Optional)
 
-A tiered PDF extraction pipeline runs on the **semantic-search / vector-ingestion path** (whenever `semanticSearch.enabled` is `true` and a PDF is indexed). It is **separate from** the legacy `documentProcessing` block above — enabling OCR here does **not** require `documentProcessing.enabled`.
+A tiered PDF extraction pipeline runs on the **semantic-search / vector-ingestion path** (whenever `semanticSearch.enabled` is `true` and a PDF is indexed). It is **separate from** the optional `documentProcessing` processors above — enabling OCR here does **not** require any of them.
 
 PDFs are extracted with a fast tier (`pypdfium2`); scanned / no-text-layer PDFs can optionally be escalated to **tier-3 OCR**. OCR has two interchangeable backends, selected by `documentPipeline.ocr.provider`:
 
@@ -638,7 +639,6 @@ auth:
       size: 200Mi
 
 documentProcessing:
-  enabled: true
   defaultProcessor: unstructured
   unstructured:
     enabled: true
