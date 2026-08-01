@@ -71,9 +71,6 @@ auth:
     # If not provided, will use Dynamic Client Registration
     clientId: "your-client-id"
     clientSecret: "your-client-secret"
-    persistence:
-      enabled: true
-      size: 100Mi
 
 ingress:
   enabled: true
@@ -117,8 +114,6 @@ ingress:
 | `auth.basic.existingSecret` | Use existing secret for credentials | `""` |
 | `auth.oauth.clientId` | OAuth client ID (OAuth mode, optional) | `""` |
 | `auth.oauth.clientSecret` | OAuth client secret (OAuth mode, optional) | `""` |
-| `auth.oauth.persistence.enabled` | Enable persistent storage for OAuth | `true` |
-| `auth.oauth.persistence.size` | Size of OAuth storage PVC | `100Mi` |
 | `auth.oidc.discoveryUrl` | OIDC discovery URL advertised on `/api/v1/status` (mode-agnostic); set to your Nextcloud OIDC discovery URL so MCP clients on managed NC skip their localhost discovery fallback | `""` |
 
 #### Data Storage
@@ -135,6 +130,7 @@ The `/app/data` directory is used for application data (token databases, Qdrant 
 
 **When to enable persistence:**
 - Multi-user basic auth with offline access (stores `tokens.db`)
+- OAuth/Login Flow v2 (DCR client registrations and app passwords also live in `tokens.db`)
 - Qdrant persistent mode (stores vector database)
 - Any feature requiring persistent app data
 
@@ -603,8 +599,6 @@ auth:
     existingSecret: nextcloud-oauth-creds
     clientIdKey: clientId
     clientSecretKey: clientSecret
-    persistence:
-      enabled: true
 
 ingress:
   enabled: true
@@ -633,10 +627,11 @@ auth:
   mode: oauth
   oauth:
     # No clientId/clientSecret - will use Dynamic Client Registration!
-    persistence:
-      enabled: true
-      storageClass: fast-ssd
-      size: 200Mi
+
+dataStorage:
+  enabled: true
+  storageClass: fast-ssd
+  size: 200Mi
 
 documentProcessing:
   defaultProcessor: unstructured
@@ -864,8 +859,8 @@ Readiness (returns 200 if ready, 503 if not ready):
    - For basic auth: verify username/password are correct
    - For OAuth: check that OIDC app is properly configured
 
-3. **OAuth persistence issues**
-   - Verify PVC is bound: `kubectl get pvc`
+3. **Storage issues**
+   - Verify the `dataStorage` PVC is bound: `kubectl get pvc`
    - Check storage class exists: `kubectl get storageclass`
 
 4. **Resource constraints**

@@ -36,6 +36,10 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "nextcloud-mcp-server.serviceAccountName" . }}
+      # Pod level, not only on the ServiceAccount: the SA field is a default a
+      # pod spec overrides, and with serviceAccount.create=false no SA object
+      # is rendered at all, so that alone would still mount the token.
+      automountServiceAccountToken: {{ .Values.serviceAccount.automount }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       {{- with .Values.initContainers }}
@@ -114,10 +118,6 @@ spec:
           volumeMounts:
             - name: tmp
               mountPath: /tmp
-            {{- if or (and (eq .Values.auth.mode "oauth") .Values.auth.oauth.persistence.enabled) (and (eq .Values.auth.mode "login-flow") .Values.auth.loginFlow.persistence.enabled) }}
-            - name: oauth-storage
-              mountPath: /app/.oauth
-            {{- end }}
             - name: data-storage
               mountPath: /app/data
             {{- include "nextcloud-mcp-server.settingsVolumeMount" . | nindent 12 }}
@@ -163,11 +163,6 @@ spec:
       volumes:
         {{- include "nextcloud-mcp-server.validateSpoolDir" . }}
         {{- include "nextcloud-mcp-server.spoolVolume" . | nindent 8 }}
-        {{- if or (and (eq .Values.auth.mode "oauth") .Values.auth.oauth.persistence.enabled) (and (eq .Values.auth.mode "login-flow") .Values.auth.loginFlow.persistence.enabled) }}
-        - name: oauth-storage
-          persistentVolumeClaim:
-            claimName: {{ include "nextcloud-mcp-server.oauthPvcName" . }}
-        {{- end }}
         - name: data-storage
         {{- if eq (include "nextcloud-mcp-server.dataStorageEnabled" .) "true" }}
           persistentVolumeClaim:

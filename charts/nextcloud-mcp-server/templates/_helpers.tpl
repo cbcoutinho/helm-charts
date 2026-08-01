@@ -132,19 +132,6 @@ provisioned by a different controller.
 {{- end }}
 
 {{/*
-Create the name of the PVC to use for OAuth / Login Flow storage
-*/}}
-{{- define "nextcloud-mcp-server.oauthPvcName" -}}
-{{- if and (eq .Values.auth.mode "login-flow") .Values.auth.loginFlow.persistence.existingClaim }}
-{{- .Values.auth.loginFlow.persistence.existingClaim }}
-{{- else if .Values.auth.oauth.persistence.existingClaim }}
-{{- .Values.auth.oauth.persistence.existingClaim }}
-{{- else }}
-{{- include "nextcloud-mcp-server.fullname" . }}-oauth-storage
-{{- end }}
-{{- end }}
-
-{{/*
 Create the name of the PVC to use for Qdrant local persistent storage
 */}}
 {{- define "nextcloud-mcp-server.qdrantPvcName" -}}

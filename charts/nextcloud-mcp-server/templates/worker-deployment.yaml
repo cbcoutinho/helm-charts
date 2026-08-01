@@ -82,6 +82,8 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "nextcloud-mcp-server.serviceAccountName" $ }}
+      # See the API deployment: pod level so it holds when create=false too.
+      automountServiceAccountToken: {{ $.Values.serviceAccount.automount }}
       securityContext:
         {{- toYaml $.Values.podSecurityContext | nindent 8 }}
       {{- with $.Values.initContainers }}
