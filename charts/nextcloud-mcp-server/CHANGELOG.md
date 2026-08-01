@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable resource limits
 - Grafana dashboard annotations
 
+## nextcloud-mcp-server-0.101.0 (2026-08-01)
+
+### Feat
+
+- **helm**: stop mounting unused k8s API token and dead /app/.oauth PVC
+
 ## nextcloud-mcp-server-0.100.6 (2026-07-31)
 
 ## nextcloud-mcp-server-0.100.5 (2026-07-31)
