@@ -1,39 +1,3 @@
-{{- if and (eq .Values.auth.mode "oauth") .Values.auth.oauth.persistence.enabled (not .Values.auth.oauth.persistence.existingClaim) }}
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: {{ include "nextcloud-mcp-server.fullname" . }}-oauth-storage
-  labels:
-    {{- include "nextcloud-mcp-server.labels" . | nindent 4 }}
-spec:
-  accessModes:
-    - {{ .Values.auth.oauth.persistence.accessMode }}
-  {{- if .Values.auth.oauth.persistence.storageClass }}
-  storageClassName: {{ .Values.auth.oauth.persistence.storageClass }}
-  {{- end }}
-  resources:
-    requests:
-      storage: {{ .Values.auth.oauth.persistence.size }}
-{{- end }}
----
-{{- if and (eq .Values.auth.mode "login-flow") .Values.auth.loginFlow.persistence.enabled (not .Values.auth.loginFlow.persistence.existingClaim) }}
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: {{ include "nextcloud-mcp-server.fullname" . }}-oauth-storage
-  labels:
-    {{- include "nextcloud-mcp-server.labels" . | nindent 4 }}
-spec:
-  accessModes:
-    - {{ .Values.auth.loginFlow.persistence.accessMode }}
-  {{- if .Values.auth.loginFlow.persistence.storageClass }}
-  storageClassName: {{ .Values.auth.loginFlow.persistence.storageClass }}
-  {{- end }}
-  resources:
-    requests:
-      storage: {{ .Values.auth.loginFlow.persistence.size }}
-{{- end }}
----
 {{- if and (eq (include "nextcloud-mcp-server.dataStorageEnabled" .) "true") (not .Values.dataStorage.existingClaim) }}
 {{- $legacyMultiUserBasic := eq (include "nextcloud-mcp-server.legacyMultiUserBasicPersistence" .) "true" }}
 {{- $legacyQdrant := eq (include "nextcloud-mcp-server.legacyQdrantPersistence" .) "true" }}

@@ -180,15 +180,6 @@ auth:
     # Keys in the existing secret
     clientIdKey: "clientId"
     clientSecretKey: "clientSecret"
-    # Persistent storage for OAuth client credentials
-    persistence:
-      enabled: true
-      # Storage class (leave empty for default)
-      storageClass: ""
-      accessMode: ReadWriteOnce
-      size: 100Mi
-      # Use existing PVC
-      existingClaim: ""
 
   # Login Flow v2 settings (experimental, ADR-022)
   # Uses Nextcloud's native Login Flow v2 to obtain app passwords per user.
@@ -222,19 +213,11 @@ auth:
     oidcExistingSecret: ""
     clientIdKey: "client_id"
     clientSecretKey: "client_secret"
-    # Persistent storage for Login Flow v2 / OAuth client registration data
-    # mounted at /app/.oauth. Required for SQLite-backed deployments;
-    # safe to set `enabled: false` when `database.url` /
-    # `database.existingSecret` is configured (the MCP server then
-    # writes OAuth client registrations to the database, ADR-026).
-    persistence:
-      enabled: true
-      # Storage class (leave empty for default)
-      storageClass: ""
-      accessMode: ReadWriteOnce
-      size: 100Mi
-      # Use existing PVC
-      existingClaim: ""
+    # NOTE: there was a `persistence` block here backing a PVC mounted at
+    # /app/.oauth. Nothing ever wrote to it -- DCR client registrations live
+    # in the `oauth_clients` table of TOKEN_STORAGE_DB (dataStorage, or
+    # `database.url` per ADR-026), never on that volume. Removed rather than
+    # left as a confusing no-op; use `dataStorage` for SQLite durability.
 
 # Data Storage Configuration
 # Persistent volume for /app/data directory
@@ -375,7 +358,18 @@ serviceAccount:
   # Specifies whether a service account should be created
   create: true
   # Automatically mount a ServiceAccount's API credentials?
-  automount: true
+  #
+  # Off by default: nextcloud-mcp-server has no Kubernetes client (no
+  # kubernetes/kr8s dependency, nothing reads /var/run/secrets/kubernetes.io).
+  # Its only coupling to the cluster is downward-API env (POD_NAME/
+  # POD_NAMESPACE), which needs no token. Mounting one would just hand a
+  # cluster credential to a process that parses untrusted documents.
+  #
+  # Applied at pod level as well as on the ServiceAccount, so it holds even
+  # when create=false. Pod level covers EVERY container in the pod, including
+  # the qdrant sidecar and any .Values.initContainers -- set this true if you
+  # add an initContainer that does need the API.
+  automount: false
   # Annotations to add to the service account
   annotations: {}
   # The name of the service account to use.

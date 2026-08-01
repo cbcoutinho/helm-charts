@@ -51,8 +51,8 @@ Your Nextcloud MCP Server has been deployed in {{ .Values.auth.mode }} authentic
    {{- else }}
    - Using Dynamic Client Registration (DCR)
    {{- end }}
-   {{- if .Values.auth.oauth.persistence.enabled }}
-   - OAuth client credentials are persisted in PVC: {{ include "nextcloud-mcp-server.oauthPvcName" . }}
+   {{- if eq (include "nextcloud-mcp-server.dataStorageEnabled" .) "true" }}
+   - OAuth client registrations are persisted in PVC: {{ include "nextcloud-mcp-server.dataStoragePvcName" . }}
    {{- end }}
 
    IMPORTANT: OAuth mode is experimental and requires patches to the user_oidc app.
