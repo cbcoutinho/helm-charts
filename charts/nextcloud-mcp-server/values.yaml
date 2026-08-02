@@ -663,6 +663,37 @@ semanticSearch:
   # sparse-only into the same collection; vectorTag (hybrid) wins when a file
   # carries both. Set to "" to disable keyword-only indexing entirely.
   keywordTag: "keyword-index"
+  # Optional cross-encoder reranking of search results (SEARCH_RERANK_*).
+  # Off by default and opt-in PER REQUEST — enabling it here only makes the
+  # capability available; callers still pass `rerank: true` (MCP tool argument
+  # or POST /api/v1/search field), and `GET /api/v1/status` advertises
+  # `rerank_available` so a client can discover it. Existing callers are
+  # unaffected.
+  rerank:
+    # REQUIRES a model gateway. As with OCR's gateway provider, the gateway URL
+    # + M2M creds (EMBEDDING_GATEWAY_URL / _TOKEN_URL / _CLIENT_ID /
+    # _CLIENT_SECRET / _SCOPE) are intentionally NOT part of this public chart —
+    # supply them from your private overlay via `extraEnv`. The server raises at
+    # startup if this is true without EMBEDDING_GATEWAY_URL, rather than
+    # silently serving unreranked results.
+    enabled: false
+    # Provider-namespaced reranker model id, routed by the gateway on the
+    # "<provider>/" prefix — e.g. "cohere/rerank-v3.5" for a hosted reranker, or
+    # a cross-encoder you serve yourself.
+    model: "BAAI/bge-reranker-v2-m3"
+    # How many retrieval candidates to rerank. Reranking can only reorder what
+    # retrieval supplied, so this — not the caller's `limit` — bounds how much
+    # it can improve; a deeper pool costs proportionally more gateway work per
+    # search. Never drops below the request's own `limit + offset`.
+    poolSize: 200
+    # Rerank request budget. On expiry the search degrades to retrieval order
+    # and still returns 200 — reranking never fails a search.
+    timeoutSeconds: 30.0
+    # Concurrent rerank calls allowed across the pod. Kept low on purpose: the
+    # gateway backing rerank also serves query embeddings, so an unbounded
+    # rerank burst turns a quality feature into a site-wide latency cliff.
+    # Searches that cannot acquire a slot fall back to retrieval order.
+    maxConcurrency: 1
 
 # Ingest queue backend (Deck #183).
 #

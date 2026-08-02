@@ -1,0 +1,84 @@
+suite: search rerank gate
+#
+# Reranking is nested under TWO gates: it is meaningless without semantic search,
+# and it is off by default within it. The failure mode worth guarding is the
+# quiet one -- a rerank key leaking into settings.toml on a deployment that never
+# asked for it, or the tuning knobs going missing on one that did. Neither shows
+# up as a template error; both show up much later as a search that reranks
+# nothing, or a pod that will not start because the gateway is absent.
+#
+templates:
+  - templates/settings-configmap.yaml
+
+tests:
+  # Semantic search off => no rerank surface at all, not even the disabled flag.
+  - it: emits nothing when semantic search is disabled
+    asserts:
+      - notMatchRegex:
+          path: data["settings.toml"]
+          pattern: 'SEARCH_RERANK'
+
+  # Enabled semantic search still renders the explicit `false`, so an operator
+  # reading the rendered ConfigMap can tell "off" from "this chart is too old to
+  # know about reranking".
+  - it: renders the disabled flag without the tuning knobs
+    set:
+      semanticSearch.enabled: true
+    asserts:
+      - matchRegex:
+          path: data["settings.toml"]
+          pattern: 'SEARCH_RERANK_ENABLED = false'
+      - notMatchRegex:
+          path: data["settings.toml"]
+          pattern: 'SEARCH_RERANK_POOL_SIZE'
+
+  - it: renders every knob once enabled
+    set:
+      semanticSearch.enabled: true
+      semanticSearch.rerank.enabled: true
+    asserts:
+      - matchRegex:
+          path: data["settings.toml"]
+          pattern: 'SEARCH_RERANK_ENABLED = true'
+      - matchRegex:
+          path: data["settings.toml"]
+          pattern: 'SEARCH_RERANK_MODEL = "BAAI/bge-reranker-v2-m3"'
+      - matchRegex:
+          path: data["settings.toml"]
+          pattern: 'SEARCH_RERANK_POOL_SIZE = 200'
+      - matchRegex:
+          path: data["settings.toml"]
+          pattern: 'SEARCH_RERANK_TIMEOUT_SECONDS = 30'
+      - matchRegex:
+          path: data["settings.toml"]
+          pattern: 'SEARCH_RERANK_MAX_CONCURRENCY = 1'
+
+  - it: passes operator overrides through
+    set:
+      semanticSearch.enabled: true
+      semanticSearch.rerank.enabled: true
+      semanticSearch.rerank.model: "cohere/rerank-v3.5"
+      semanticSearch.rerank.poolSize: 60
+      semanticSearch.rerank.maxConcurrency: 4
+    asserts:
+      - matchRegex:
+          path: data["settings.toml"]
+          pattern: 'SEARCH_RERANK_MODEL = "cohere/rerank-v3.5"'
+      - matchRegex:
+          path: data["settings.toml"]
+          pattern: 'SEARCH_RERANK_POOL_SIZE = 60'
+      - matchRegex:
+          path: data["settings.toml"]
+          pattern: 'SEARCH_RERANK_MAX_CONCURRENCY = 4'
+
+  # Reranking without semantic search cannot work -- there is nothing to rerank.
+  # Rendering it anyway would put SEARCH_RERANK_ENABLED = true into a pod with no
+  # gateway configured, which the app rejects at startup: a crashloop produced by
+  # a values combination the chart accepted.
+  - it: stays silent when rerank is enabled but semantic search is not
+    set:
+      semanticSearch.rerank.enabled: true
+    asserts:
+      - notMatchRegex:
+          path: data["settings.toml"]
+          pattern: 'SEARCH_RERANK'
