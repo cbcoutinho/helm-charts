@@ -85,6 +85,13 @@ EXCLUDED_TAGS = {{ . | quote }}
 {{- end }}
 VECTOR_SYNC_TAG = {{ required "semanticSearch.vectorTag must be a non-empty Nextcloud tag name (the app rejects an empty VECTOR_SYNC_TAG)" .Values.semanticSearch.vectorTag | quote }}
 VECTOR_SYNC_KEYWORD_TAG = {{ .Values.semanticSearch.keywordTag | quote }}
+SEARCH_RERANK_ENABLED = {{ .Values.semanticSearch.rerank.enabled }}
+{{- if .Values.semanticSearch.rerank.enabled }}
+SEARCH_RERANK_MODEL = {{ .Values.semanticSearch.rerank.model | quote }}
+SEARCH_RERANK_POOL_SIZE = {{ .Values.semanticSearch.rerank.poolSize }}
+SEARCH_RERANK_TIMEOUT_SECONDS = {{ .Values.semanticSearch.rerank.timeoutSeconds }}
+SEARCH_RERANK_MAX_CONCURRENCY = {{ .Values.semanticSearch.rerank.maxConcurrency }}
+{{- end }}
 {{- end }}
 # Observability
 METRICS_ENABLED = {{ .Values.observability.metrics.enabled }}

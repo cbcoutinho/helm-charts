@@ -257,6 +257,24 @@ Enable semantic search capabilities with BM25 hybrid search by deploying a vecto
 | `semanticSearch.excludedTags` | Comma-separated Nextcloud tag names to exclude from indexing (`EXCLUDED_TAGS`) | `""` |
 | `semanticSearch.vectorTag` | Nextcloud tag marking files for hybrid (dense + BM25 sparse) indexing (`VECTOR_SYNC_TAG`) | `"vector-index"` |
 | `semanticSearch.keywordTag` | Nextcloud tag marking files for keyword-only (BM25 sparse) indexing (`VECTOR_SYNC_KEYWORD_TAG`); set `""` to disable; hybrid wins when a file carries both | `"keyword-index"` |
+| `semanticSearch.rerank.enabled` | Make cross-encoder reranking available (`SEARCH_RERANK_ENABLED`). Requires a gateway — see note below | `false` |
+| `semanticSearch.rerank.model` | Provider-namespaced reranker model id (`SEARCH_RERANK_MODEL`) | `"BAAI/bge-reranker-v2-m3"` |
+| `semanticSearch.rerank.poolSize` | Retrieval candidates to rerank (`SEARCH_RERANK_POOL_SIZE`) | `200` |
+| `semanticSearch.rerank.timeoutSeconds` | Rerank request budget; on expiry the search degrades to retrieval order (`SEARCH_RERANK_TIMEOUT_SECONDS`) | `30.0` |
+| `semanticSearch.rerank.maxConcurrency` | Concurrent rerank calls per pod (`SEARCH_RERANK_MAX_CONCURRENCY`) | `1` |
+
+**Reranking** is off by default and opt-in **per request** — enabling it in
+values only makes the capability available; callers still pass `rerank: true`
+(the `nc_semantic_search` tool argument, or the `rerank` field on
+`POST /api/v1/search`), and `GET /api/v1/status` advertises `rerank_available`
+so a client can discover it before asking. Existing callers are unaffected.
+
+It **requires a model gateway**. As with the OCR `gateway` provider, the gateway
+URL and M2M credentials (`EMBEDDING_GATEWAY_URL` / `_TOKEN_URL` / `_CLIENT_ID` /
+`_CLIENT_SECRET` / `_SCOPE`) are intentionally **not** part of this public chart —
+supply them from your private overlay via `extraEnv`. Setting
+`semanticSearch.rerank.enabled: true` without `EMBEDDING_GATEWAY_URL` makes the
+server raise at startup rather than silently serve unreranked results.
 
 **Ingest Queue Configuration (Deck #183):**
 
