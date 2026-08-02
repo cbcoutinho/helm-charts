@@ -1,0 +1,42 @@
+suite: ingest-worker entrypoint override
+#
+# Regression guard: the worker is the only container that overrides the image's
+# `command` (the entrypoint hardcodes the `run` subcommand, which `args:` alone
+# cannot strip). It once pinned the interpreter by absolute path,
+# /app/.venv/bin/nextcloud-mcp-server. When the image relocated its virtualenv
+# to /opt/venv, that path went stale and every worker pod died in runc *before*
+# the process started -- exit 128 / StartError / CrashLoopBackOff, with zero log
+# lines to diagnose from. The API pod was unaffected because it never names the
+# path.
+#
+# So: resolve via PATH, and keep it that way.
+#
+templates:
+  - templates/worker-deployment.yaml
+  - templates/settings-configmap.yaml
+  # Not asserted on, but the Deployment computes a checksum/config annotation
+  # over it, so it must be loaded for the template to render.
+  - templates/secret.yaml
+
+set:
+  ingest.splitWorker: true
+
+tests:
+  - it: invokes the worker binary via PATH, not an absolute venv path
+    template: templates/worker-deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].command
+          value:
+            - "nextcloud-mcp-server"
+            - "worker"
+
+  # Belt and braces: the assertion above pins the whole list, but this one names
+  # the actual failure mode, so a future edit that reintroduces any absolute
+  # interpreter path fails with a message that says why.
+  - it: pins no absolute interpreter path in the worker command
+    template: templates/worker-deployment.yaml
+    asserts:
+      - notMatchRegex:
+          path: spec.template.spec.containers[0].command[0]
+          pattern: ^/
