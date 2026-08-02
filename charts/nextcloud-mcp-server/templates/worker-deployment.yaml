@@ -99,8 +99,12 @@ spec:
           # Override the image's default `run` entrypoint to drain the queue.
           # With --tier, this worker drains only that tier's queue; without it
           # (single-worker fallback) it drains every ingest tier queue.
+          # Resolved via PATH, not an absolute venv path: the image has moved its
+          # virtualenv before (/app/.venv -> /opt/venv), and an absolute path that
+          # goes stale fails in runc *before* the process starts — exit 128,
+          # CrashLoopBackOff, and zero log lines to diagnose from.
           command:
-            - "/app/.venv/bin/nextcloud-mcp-server"
+            - "nextcloud-mcp-server"
             - "worker"
           {{- if or $name $concurrency }}
           args:
