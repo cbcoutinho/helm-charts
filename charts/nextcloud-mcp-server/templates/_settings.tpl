@@ -110,6 +110,13 @@ PYROSCOPE_SERVER_ADDRESS = {{ .Values.observability.profiling.serverAddress | qu
 LOG_FORMAT = {{ .Values.observability.logging.format | quote }}
 LOG_LEVEL = {{ .Values.observability.logging.level | quote }}
 LOG_INCLUDE_TRACE_CONTEXT = {{ .Values.observability.logging.includeTraceContext }}
+{{- /* Optional: unset must stay unset so the app keeps uvicorn's own resolution
+       (127.0.0.1 only). Emitting "" here would be read as an empty trust list,
+       not as "default". */}}
+{{- with .Values.mcp.forwardedAllowIps }}
+# Reverse-proxy trust list; also what the OAuth DCR rate limiter buckets on.
+FORWARDED_ALLOW_IPS = {{ . | quote }}
+{{- end }}
 {{- with .Values.settings.content }}
 
 # --- operator-supplied extra settings (.Values.settings.content) ---

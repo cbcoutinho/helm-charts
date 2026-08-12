@@ -143,6 +143,7 @@ The `/app/data` directory is used for application data (token databases, Qdrant 
 | `mcp.transport` | Transport mode | `streamable-http` |
 | `mcp.port` | Server port (used by both auth modes) | `8000` |
 | `mcp.extraArgs` | Additional command-line arguments | `[]` |
+| `mcp.forwardedAllowIps` | Hosts/CIDRs whose `X-Forwarded-For` is trusted, e.g. the pod CIDR. Empty trusts only `127.0.0.1`, so a proxied deployment logs the proxy's address and buckets every client into one DCR rate limit. Requires appVersion >= 0.170.1 | `""` |
 
 The `extraArgs` parameter allows you to pass additional command-line arguments to the MCP server. This is useful for enabling debug logging, enabling specific apps, or other runtime configuration.
 
