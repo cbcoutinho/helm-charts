@@ -1,0 +1,48 @@
+suite: reverse-proxy trust list
+#
+# FORWARDED_ALLOW_IPS is an optional whose unset and empty states are NOT the
+# same thing, which is the whole reason this needs a guard rather than a plain
+# assignment. Omitted, the app keeps uvicorn's own resolution and trusts
+# 127.0.0.1. Emitted as "", uvicorn takes the empty string literally and trusts
+# *nothing* -- narrower than the default, and silent about it.
+#
+# Neither state is a template error, and neither is visible in a diff of the
+# rendered ConfigMap unless you already know to look. What they surface as,
+# much later, is every request logged as the ingress controller's address and
+# every client behind it sharing one OAuth DCR rate-limit bucket.
+#
+templates:
+  - templates/settings-configmap.yaml
+
+tests:
+  - it: emits nothing by default
+    asserts:
+      - notMatchRegex:
+          path: data["settings.toml"]
+          pattern: 'FORWARDED_ALLOW_IPS'
+
+  # The guard's real job: "" must be omitted, not written through.
+  - it: treats an explicitly empty value as unset
+    set:
+      mcp.forwardedAllowIps: ""
+    asserts:
+      - notMatchRegex:
+          path: data["settings.toml"]
+          pattern: 'FORWARDED_ALLOW_IPS'
+
+  - it: renders a CIDR, quoted
+    set:
+      mcp.forwardedAllowIps: "10.42.0.0/16"
+    asserts:
+      - matchRegex:
+          path: data["settings.toml"]
+          pattern: 'FORWARDED_ALLOW_IPS = "10\.42\.0\.0/16"'
+
+  # A list is one TOML string, not an array -- the app splits on commas itself.
+  - it: renders a comma-separated list as a single quoted string
+    set:
+      mcp.forwardedAllowIps: "10.42.0.0/16,192.168.1.5"
+    asserts:
+      - matchRegex:
+          path: data["settings.toml"]
+          pattern: 'FORWARDED_ALLOW_IPS = "10\.42\.0\.0/16,192\.168\.1\.5"'

@@ -306,6 +306,20 @@ mcp:
   # Additional command-line arguments to pass to nextcloud-mcp-server
   # Example: ["--log-level", "debug", "--enable-app", "notes"]
   extraArgs: []
+  # Comma-separated hosts/CIDRs whose X-Forwarded-For/-Proto headers are trusted
+  # (FORWARDED_ALLOW_IPS). Behind an ingress controller or gateway this is what
+  # makes the server see the real client instead of the proxy — it feeds the
+  # access log AND the per-client OAuth DCR rate-limit bucket, which otherwise
+  # lumps every client behind the proxy together. Set it to the *pod* CIDR: the
+  # proxy's address as this pod sees it, e.g. "10.42.0.0/16".
+  #
+  # Empty (the default) leaves the app's own resolution alone, which trusts only
+  # 127.0.0.1 — the conservative choice, since a wider list is a licence to spoof
+  # a client address. Prefer a CIDR over "*", which trusts anything and takes the
+  # attacker-controlled left-most XFF entry; note "*" is only a wildcard as the
+  # *entire* value (inside a list it matches nothing and silently narrows the
+  # list). Requires appVersion >= 0.170.1.
+  forwardedAllowIps: ""
 
 # Optional document processors (PDF, DOCX, images, etc.)
 #
