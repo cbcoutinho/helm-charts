@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable resource limits
 - Grafana dashboard annotations
 
+## nextcloud-mcp-server-0.104.0 (2026-08-15)
+
+### Feat
+
+- **helm**: scope the OAuth server leg to the API pod
+
 ## nextcloud-mcp-server-0.103.2 (2026-08-14)
 
 ## nextcloud-mcp-server-0.103.1 (2026-08-14)
