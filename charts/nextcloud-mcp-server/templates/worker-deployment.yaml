@@ -2,10 +2,12 @@
 {{- /*
 Ingest worker Deployment(s) (Deck #183; per-tier fleets #324). Only rendered when
 ingest.splitWorker is true: drains the per-tenant procrastinate Postgres queue
-(fetch → chunk → embed → upsert Qdrant). Shares the API container env verbatim
-via `nextcloud-mcp-server.containerEnv`; only the command, INGEST_QUEUE and
-MCP_ROLE differ. Replicas are a floor — apply a KEDA ScaledObject (platform
-layer) targeting each Deployment by name for scale-to-zero on queue depth.
+(fetch → chunk → embed → upsert Qdrant). Takes the SHARED container env
+(`nextcloud-mcp-server.containerEnv`) and adds the command, INGEST_QUEUE,
+MCP_ROLE and ingest.worker.extraEnv. It deliberately does NOT include
+`apiOnlyEnv` — the OAuth/OIDC server leg the API Pod alone reads (Deck #1026).
+Replicas are a floor — apply a KEDA ScaledObject (platform layer) targeting each
+Deployment by name for scale-to-zero on queue depth.
 
 Topology: when `ingest.worker.tiers` is set, one Deployment per tier
 (`<fullname>-worker-<tier>`, `worker --tier <name>`) so a CPU-bound `fast` fleet,
@@ -133,6 +135,13 @@ spec:
               value: "postgres"
             - name: MCP_ROLE
               value: "worker"
+            {{- with $w.extraEnv }}
+            # Worker-only extra env (the shared .Values.extraEnv is already in
+            # containerEnv above). Applies to every tier — a tier that needs its
+            # own env can still get it from a per-tier ScaledObject/patch at the
+            # platform layer.
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
           {{- with $.Values.extraEnvFrom }}
           envFrom:
             {{- toYaml . | nindent 12 }}

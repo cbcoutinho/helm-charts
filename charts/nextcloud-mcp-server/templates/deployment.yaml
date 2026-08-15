@@ -76,6 +76,7 @@ spec:
             {{- end }}
           env:
 {{- include "nextcloud-mcp-server.containerEnv" . }}
+{{- include "nextcloud-mcp-server.apiOnlyEnv" . }}
             # Webhook delivery authentication (ADR-010, GHSA-8vh3-g2qg-2h2c).
             # API-only: the receiver route + registrar live in the API pod;
             # the ingest worker drains the queue and never handles webhooks.

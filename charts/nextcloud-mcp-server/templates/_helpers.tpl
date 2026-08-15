@@ -358,9 +358,16 @@ exists and both the api and ingest-worker pods always mount it.
 
 {{/*
 Shared container env for the API Deployment and the ingest worker Deployment.
-Both roles get the identical env; INGEST_QUEUE and MCP_ROLE are layered on
-per-Deployment by the caller. Extracted verbatim from the API deployment so
-both pods stay in lock-step (Deck #183).
+INGEST_QUEUE and MCP_ROLE are layered on per-Deployment by the caller.
+
+This is the env BOTH roles read. The API-only half — the OAuth/OIDC
+server-leg config the worker never touches — lives in `apiOnlyEnv` below and is
+included by templates/deployment.yaml alone (Deck #1026). What stays here is
+what the worker's own client path needs: MCP_DEPLOYMENT_MODE (its
+`_resolve_client` calls `detect_auth_mode`), TOKEN_STORAGE_DB /
+TOKEN_ENCRYPTION_KEY (it decrypts the stored app password to fetch documents as
+the owning user), the single-user BasicAuth credentials, DATABASE_URL, and the
+storage/embedding/processing config.
 */}}
 {{- define "nextcloud-mcp-server.containerEnv" }}
             # The generated dynaconf settings.toml carries the NON-SECRET config
@@ -428,10 +435,6 @@ both pods stay in lock-step (Deck #183).
             # now loud-fails on (ADR-022 follow-up).
             - name: MCP_DEPLOYMENT_MODE
               value: "multi_user_basic"
-            - name: NEXTCLOUD_MCP_SERVER_URL
-              value: {{ include "nextcloud-mcp-server.mcpServerUrl" . | quote }}
-            - name: NEXTCLOUD_PUBLIC_ISSUER_URL
-              value: {{ include "nextcloud-mcp-server.publicIssuerUrl" . | quote }}
             {{- if .Values.auth.multiUserBasic.enableOfflineAccess }}
             # Background operations with app passwords (replaces deprecated ENABLE_OFFLINE_ACCESS)
             - name: ENABLE_BACKGROUND_OPERATIONS
@@ -443,41 +446,6 @@ both pods stay in lock-step (Deck #183).
                 secretKeyRef:
                   name: {{ include "nextcloud-mcp-server.multiUserBasicSecretName" . }}
                   key: {{ .Values.auth.multiUserBasic.tokenEncryptionKeyKey }}
-            - name: NEXTCLOUD_OIDC_SCOPES
-              value: {{ .Values.auth.multiUserBasic.scopes | quote }}
-            {{- if or .Values.auth.multiUserBasic.clientId .Values.auth.multiUserBasic.existingSecret }}
-            # Static OAuth credentials (optional - uses DCR if not provided)
-            - name: NEXTCLOUD_OIDC_CLIENT_ID
-              valueFrom:
-                secretKeyRef:
-                  name: {{ include "nextcloud-mcp-server.multiUserBasicSecretName" . }}
-                  key: {{ .Values.auth.multiUserBasic.clientIdKey }}
-            - name: NEXTCLOUD_OIDC_CLIENT_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: {{ include "nextcloud-mcp-server.multiUserBasicSecretName" . }}
-                  key: {{ .Values.auth.multiUserBasic.clientSecretKey }}
-            {{- end }}
-            {{- end }}
-            {{- else if eq .Values.auth.mode "oauth" }}
-            # OAuth mode
-            - name: NEXTCLOUD_MCP_SERVER_URL
-              value: {{ include "nextcloud-mcp-server.mcpServerUrl" . | quote }}
-            - name: NEXTCLOUD_PUBLIC_ISSUER_URL
-              value: {{ include "nextcloud-mcp-server.publicIssuerUrl" . | quote }}
-            - name: NEXTCLOUD_OIDC_SCOPES
-              value: {{ .Values.auth.oauth.scopes | quote }}
-            {{- if or .Values.auth.oauth.clientId .Values.auth.oauth.existingSecret }}
-            - name: NEXTCLOUD_OIDC_CLIENT_ID
-              valueFrom:
-                secretKeyRef:
-                  name: {{ include "nextcloud-mcp-server.oauthSecretName" . }}
-                  key: {{ .Values.auth.oauth.clientIdKey }}
-            - name: NEXTCLOUD_OIDC_CLIENT_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: {{ include "nextcloud-mcp-server.oauthSecretName" . }}
-                  key: {{ .Values.auth.oauth.clientSecretKey }}
             {{- end }}
             {{- else if eq .Values.auth.mode "login-flow" }}
             # Login Flow v2 mode (ADR-022). Replaces the legacy
@@ -485,10 +453,6 @@ both pods stay in lock-step (Deck #183).
             # on if set to a truthy value.
             - name: MCP_DEPLOYMENT_MODE
               value: "login_flow"
-            - name: NEXTCLOUD_MCP_SERVER_URL
-              value: {{ include "nextcloud-mcp-server.mcpServerUrl" . | quote }}
-            - name: NEXTCLOUD_PUBLIC_ISSUER_URL
-              value: {{ include "nextcloud-mcp-server.publicIssuerUrl" . | quote }}
             - name: TOKEN_STORAGE_DB
               value: {{ .Values.auth.loginFlow.tokenStorageDb | quote }}
             - name: TOKEN_ENCRYPTION_KEY
@@ -496,32 +460,6 @@ both pods stay in lock-step (Deck #183).
                 secretKeyRef:
                   name: {{ include "nextcloud-mcp-server.loginFlowSecretName" . }}
                   key: {{ .Values.auth.loginFlow.tokenEncryptionKeyKey }}
-            {{- if or .Values.auth.loginFlow.clientId .Values.auth.loginFlow.oidcExistingSecret }}
-            # OIDC client creds. The MCP-client ↔ MCP-server leg uses
-            # OAuth/OIDC; the server's setup_oauth_config requires
-            # NEXTCLOUD_OIDC_CLIENT_ID / _SECRET unless the OIDC provider
-            # supports Dynamic Client Registration. Set clientId (inline)
-            # or oidcExistingSecret to opt in. Static-creds users where
-            # token-encryption-key + OIDC creds live in one Secret should
-            # set both `existingSecret` and `oidcExistingSecret` to that
-            # Secret name.
-            - name: NEXTCLOUD_OIDC_CLIENT_ID
-              valueFrom:
-                secretKeyRef:
-                  name: {{ include "nextcloud-mcp-server.loginFlowOidcSecretName" . }}
-                  key: {{ .Values.auth.loginFlow.clientIdKey }}
-            - name: NEXTCLOUD_OIDC_CLIENT_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: {{ include "nextcloud-mcp-server.loginFlowOidcSecretName" . }}
-                  key: {{ .Values.auth.loginFlow.clientSecretKey }}
-            {{- end }}
-            {{- end }}
-            {{- with .Values.auth.oidc.discoveryUrl }}
-            # OIDC discovery URL advertised to MCP clients via /api/v1/status
-            # so they can skip their own localhost-based discovery fallback.
-            - name: OIDC_DISCOVERY_URL
-              value: {{ . | quote }}
             {{- end }}
             {{- $dp := .Values.documentProcessing }}
             {{- if or $dp.unstructured.enabled $dp.tesseract.enabled $dp.custom.enabled }}
@@ -648,6 +586,109 @@ both pods stay in lock-step (Deck #183).
             {{- end }}
             {{- end }}
             {{- with .Values.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+{{- end }}
+
+{{/*
+API-only container env: the OAuth/OIDC SERVER leg (Deck #1026).
+
+Included by templates/deployment.yaml only. Every var here is read exclusively
+by code that runs under uvicorn — `app.py`'s `setup_oauth_config`, the
+`auth/*_routes.py` handlers, `/api/v1/status`, and the Astrolabe link builder in
+`server/semantic.py`. The ingest worker CLI never starts that stack: it resolves
+its Nextcloud client from the app password in the database
+(`_resolve_client` -> `get_user_client_basic_auth`), which needs
+MCP_DEPLOYMENT_MODE + TOKEN_* + NEXTCLOUD_HOST and nothing from this block.
+
+So a worker Pod that carried these gained no capability — it only mounted the
+OIDC client Secret it has no use for, and rolled on every OAuth-side change.
+
+The auth-mode chain is duplicated from containerEnv rather than parameterised
+with a role flag: the alternative threads a merged context through the shared
+helper and rewrites every `.Values` reference in it, for a much larger diff than
+these six lines of `if`.
+*/}}
+{{- define "nextcloud-mcp-server.apiOnlyEnv" }}
+            {{- if eq .Values.auth.mode "multi-user-basic" }}
+            - name: NEXTCLOUD_MCP_SERVER_URL
+              value: {{ include "nextcloud-mcp-server.mcpServerUrl" . | quote }}
+            - name: NEXTCLOUD_PUBLIC_ISSUER_URL
+              value: {{ include "nextcloud-mcp-server.publicIssuerUrl" . | quote }}
+            {{- if .Values.auth.multiUserBasic.enableOfflineAccess }}
+            - name: NEXTCLOUD_OIDC_SCOPES
+              value: {{ .Values.auth.multiUserBasic.scopes | quote }}
+            {{- if or .Values.auth.multiUserBasic.clientId .Values.auth.multiUserBasic.existingSecret }}
+            # Static OAuth credentials (optional - uses DCR if not provided)
+            - name: NEXTCLOUD_OIDC_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "nextcloud-mcp-server.multiUserBasicSecretName" . }}
+                  key: {{ .Values.auth.multiUserBasic.clientIdKey }}
+            - name: NEXTCLOUD_OIDC_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "nextcloud-mcp-server.multiUserBasicSecretName" . }}
+                  key: {{ .Values.auth.multiUserBasic.clientSecretKey }}
+            {{- end }}
+            {{- end }}
+            {{- else if eq .Values.auth.mode "oauth" }}
+            # OAuth mode
+            - name: NEXTCLOUD_MCP_SERVER_URL
+              value: {{ include "nextcloud-mcp-server.mcpServerUrl" . | quote }}
+            - name: NEXTCLOUD_PUBLIC_ISSUER_URL
+              value: {{ include "nextcloud-mcp-server.publicIssuerUrl" . | quote }}
+            - name: NEXTCLOUD_OIDC_SCOPES
+              value: {{ .Values.auth.oauth.scopes | quote }}
+            {{- if or .Values.auth.oauth.clientId .Values.auth.oauth.existingSecret }}
+            - name: NEXTCLOUD_OIDC_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "nextcloud-mcp-server.oauthSecretName" . }}
+                  key: {{ .Values.auth.oauth.clientIdKey }}
+            - name: NEXTCLOUD_OIDC_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "nextcloud-mcp-server.oauthSecretName" . }}
+                  key: {{ .Values.auth.oauth.clientSecretKey }}
+            {{- end }}
+            {{- else if eq .Values.auth.mode "login-flow" }}
+            - name: NEXTCLOUD_MCP_SERVER_URL
+              value: {{ include "nextcloud-mcp-server.mcpServerUrl" . | quote }}
+            - name: NEXTCLOUD_PUBLIC_ISSUER_URL
+              value: {{ include "nextcloud-mcp-server.publicIssuerUrl" . | quote }}
+            {{- if or .Values.auth.loginFlow.clientId .Values.auth.loginFlow.oidcExistingSecret }}
+            # OIDC client creds. The MCP-client ↔ MCP-server leg uses
+            # OAuth/OIDC; the server's setup_oauth_config requires
+            # NEXTCLOUD_OIDC_CLIENT_ID / _SECRET unless the OIDC provider
+            # supports Dynamic Client Registration. Set clientId (inline)
+            # or oidcExistingSecret to opt in. Static-creds users where
+            # token-encryption-key + OIDC creds live in one Secret should
+            # set both `existingSecret` and `oidcExistingSecret` to that
+            # Secret name.
+            - name: NEXTCLOUD_OIDC_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "nextcloud-mcp-server.loginFlowOidcSecretName" . }}
+                  key: {{ .Values.auth.loginFlow.clientIdKey }}
+            - name: NEXTCLOUD_OIDC_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "nextcloud-mcp-server.loginFlowOidcSecretName" . }}
+                  key: {{ .Values.auth.loginFlow.clientSecretKey }}
+            {{- end }}
+            {{- end }}
+            {{- with .Values.auth.oidc.discoveryUrl }}
+            # OIDC discovery URL advertised to MCP clients via /api/v1/status
+            # so they can skip their own localhost-based discovery fallback.
+            - name: OIDC_DISCOVERY_URL
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.extraEnvApi }}
+            # API-only extra env. The shared `extraEnv` above lands on both
+            # roles; put anything the worker has no use for here (e.g. the
+            # management-API / MCP-client allowlists) so it stops rolling and
+            # over-privileging worker Pods.
             {{- toYaml . | nindent 12 }}
             {{- end }}
 {{- end }}
