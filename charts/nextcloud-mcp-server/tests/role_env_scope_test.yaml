@@ -103,6 +103,101 @@ tests:
                 name: tenant-login-flow
                 key: token_encryption_key
 
+  # The other two modes that carry an apiOnlyEnv branch. login-flow above is the
+  # deployed one, but oauth and multi-user-basic have the most branches (scopes,
+  # a second OIDC Secret name), so a refactor is likeliest to leak the OAuth leg
+  # back onto the worker there.
+  - it: withholds the OAuth server leg from the worker in oauth mode
+    template: templates/worker-deployment.yaml
+    set:
+      auth.mode: oauth
+      auth.oauth.clientId: cid
+      auth.oauth.clientSecret: sec
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          any: true
+          content:
+            name: NEXTCLOUD_OIDC_SCOPES
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          any: true
+          content:
+            name: NEXTCLOUD_OIDC_CLIENT_ID
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          any: true
+          content:
+            name: NEXTCLOUD_MCP_SERVER_URL
+
+  - it: keeps the OAuth server leg on the API Pod in oauth mode
+    template: templates/deployment.yaml
+    set:
+      auth.mode: oauth
+      auth.oauth.clientId: cid
+      auth.oauth.clientSecret: sec
+      # Pinned so the assertion doesn't carry the (long, churn-prone) default.
+      auth.oauth.scopes: openid profile email
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: NEXTCLOUD_OIDC_CLIENT_ID
+            valueFrom:
+              secretKeyRef:
+                name: RELEASE-NAME-nextcloud-mcp-server-oauth
+                key: clientId
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: NEXTCLOUD_OIDC_SCOPES
+            value: openid profile email
+
+  # multi-user-basic puts the token-encryption key and the OIDC client creds in
+  # the SAME Secret, so this is where a split could most plausibly take the
+  # worker's token store with it (or leave the creds behind).
+  - it: gives the multi-user-basic worker the token store but not the OIDC creds
+    template: templates/worker-deployment.yaml
+    set:
+      auth.mode: multi-user-basic
+      auth.multiUserBasic.enableOfflineAccess: true
+      auth.multiUserBasic.existingSecret: mub
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: TOKEN_ENCRYPTION_KEY
+            valueFrom:
+              secretKeyRef:
+                name: mub
+                key: token_encryption_key
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          any: true
+          content:
+            name: NEXTCLOUD_OIDC_CLIENT_ID
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          any: true
+          content:
+            name: NEXTCLOUD_OIDC_SCOPES
+
+  - it: keeps the OIDC creds on the multi-user-basic API Pod
+    template: templates/deployment.yaml
+    set:
+      auth.mode: multi-user-basic
+      auth.multiUserBasic.enableOfflineAccess: true
+      auth.multiUserBasic.existingSecret: mub
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: NEXTCLOUD_OIDC_CLIENT_ID
+            valueFrom:
+              secretKeyRef:
+                name: mub
+                key: client_id
+
   - it: routes the extraEnv lists to the API Pod (shared + api-only, no worker-only)
     template: templates/deployment.yaml
     asserts:
