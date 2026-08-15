@@ -605,10 +605,20 @@ affinity: {}
 # Init containers
 initContainers: []
 
-# Additional environment variables
+# Additional environment variables, applied to BOTH the api Pod and every
+# ingest-worker Pod.
 extraEnv: []
 # - name: CUSTOM_VAR
 #   value: "custom_value"
+
+# Additional environment variables for the API Pod ONLY (appended after
+# extraEnv). Use this for anything only the HTTP/MCP surface reads — management
+# API and MCP client allowlists, OAuth-side config — so it neither lands in the
+# ingest-worker Pods nor rolls them when it changes. Inert when
+# ingest.splitWorker is false (there is only one Pod, so extraEnv is equivalent).
+extraEnvApi: []
+# - name: ALLOWED_MGMT_CLIENT
+#   value: "client-id"
 
 # Additional environment variables from ConfigMaps or Secrets
 extraEnvFrom: []
@@ -745,6 +755,10 @@ ingest:
     # Max concurrent jobs per worker (CLI -c). Empty → the server default
     # (VECTOR_SYNC_PROCESSOR_WORKERS).
     concurrency: ""
+    # Additional environment variables for the ingest-worker Pods ONLY
+    # (appended after the shared extraEnv). The API-only counterpart is the
+    # top-level `extraEnvApi`.
+    extraEnv: []
     # Resource requests/limits for the worker container. Non-empty by default:
     # an empty block is rejected outright by a namespace ResourceQuota that
     # tracks cpu/memory ("must specify requests.cpu/limits.cpu/…"), which leaves

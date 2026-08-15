@@ -290,6 +290,19 @@ procrastinate is **opt-in**. By default document processing runs in-process via 
 | `ingest.worker.nodeSelector` | Worker node selector | `{}` |
 | `ingest.worker.tolerations` | Worker tolerations | `[]` |
 | `ingest.worker.affinity` | Worker affinity | `{}` |
+| `ingest.worker.extraEnv` | Extra env for the worker Pods only (appended after the shared `extraEnv`) | `[]` |
+
+**Per-role env scoping:** the two roles no longer receive identical env. The
+OAuth/OIDC *server* leg — `NEXTCLOUD_MCP_SERVER_URL`,
+`NEXTCLOUD_PUBLIC_ISSUER_URL`, `NEXTCLOUD_OIDC_SCOPES`,
+`NEXTCLOUD_OIDC_CLIENT_ID`/`_SECRET`, `OIDC_DISCOVERY_URL` — plus
+`WEBHOOK_SECRET`/`WEBHOOK_INTERNAL_URL` go to the API pod only. The worker never
+runs the HTTP/OAuth stack; it authenticates to Nextcloud with the app password it
+decrypts from the database, so it keeps `MCP_DEPLOYMENT_MODE`, `TOKEN_STORAGE_DB`,
+`TOKEN_ENCRYPTION_KEY`, `DATABASE_URL`, the single-user BasicAuth credentials, and
+all storage/embedding/document config. For your own vars: `extraEnv` lands on both
+roles, `extraEnvApi` on the API pod only, `ingest.worker.extraEnv` on the worker
+pods only.
 
 **Document Chunking Configuration:**
 
