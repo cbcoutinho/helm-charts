@@ -321,14 +321,28 @@ mcp:
   # list). Requires appVersion >= 0.170.1.
   forwardedAllowIps: ""
 
-# Optional document processors (PDF, DOCX, images, etc.)
+# Optional document processors.
 #
 # There is no master switch: app >= 0.151.0 removed ENABLE_DOCUMENT_PROCESSING
-# and each processor below registers from its own ENABLE_* flag. Built-in PDF
-# extraction is always available; whether a read parses a document is the
+# and each processor below registers from its own ENABLE_* flag. Built-in
+# extraction needs none of them: PDF, and (app >= 0.195.0) .docx/.xlsx/.pptx and
+# Outlook .msg, are read in-process. Whether a read parses a document is the
 # caller's per-call choice (nc_webdav_read_file's parse_document argument).
 # `documentProcessing.enabled` is gone — enable the processors you want directly.
 documentProcessing:
+  # Collabora Online (coolwsd) conversion service for legacy .doc/.xls/.ppt and
+  # ODF .odt/.ods/.odp (ADR-039, app >= 0.195.0). Files are converted to OOXML by
+  # coolwsd's stateless /cool/convert-to API and read by the native readers.
+  # Point it at an existing coolwsd, e.g. the one serving Nextcloud Office.
+  # coolwsd only answers convert-to for clients in its net.post_allow list; the
+  # default covers private ranges, which includes typical pod CIDRs.
+  # Empty = these types are not claimed.
+  collabora:
+    # coolwsd base URL (COLLABORA_URL), e.g. http://collabora:9980
+    url: ""
+    # Per-file convert-to request timeout in seconds (COLLABORA_TIMEOUT_SECONDS)
+    timeoutSeconds: 60
+
   # Default processor: unstructured, tesseract, or custom
   defaultProcessor: "unstructured"
   # Progress reporting interval in seconds
@@ -627,20 +641,21 @@ extraEnvFrom: []
 # - secretRef:
 #     name: my-secret
 
-# Webhook delivery authentication (ADR-010, GHSA-8vh3-g2qg-2h2c).
+# Webhook receiver authentication (ADR-010, GHSA-8vh3-g2qg-2h2c).
 #
-# As of app version 0.117.2 a webhook secret is REQUIRED to enable webhooks.
-# When configured, the MCP server mounts the /webhooks/nextcloud receiver
-# route, registers webhooks with Nextcloud using
-# `Authorization: Bearer <secret>`, and validates that header on every
-# delivery. When unset, the receiver route is NOT mounted, the receiver
-# refuses any request that reaches it (503), and registration refuses to
-# create webhooks — vector sync then falls back to the periodic polling
-# scanner. Leave this block empty to keep webhooks disabled.
+# Change events are delivered by the Astrolabe Nextcloud app: it subscribes to
+# Nextcloud's events and POSTs each one to the MCP server's /webhooks/nextcloud
+# with `Authorization: Bearer <secret>`. Set Astrolabe's `mcp_webhook_secret`
+# system config to the same value. The MCP server registers nothing with
+# Nextcloud itself.
 #
-# These env vars are injected only into the API pod (the receiver route and
-# registrar live there); the ingest worker drains the queue and never handles
-# webhooks.
+# When configured, the server mounts the receiver and validates that header on
+# every delivery. When unset, the route is NOT mounted and vector sync falls
+# back to the periodic polling scanner. Leave this block empty to keep webhooks
+# disabled.
+#
+# The secret is injected only into the API pod (the receiver lives there); the
+# ingest worker drains the queue and never handles webhooks.
 webhooks:
   # Inline webhook secret (WEBHOOK_SECRET). MUST be at least 16 characters
   # (the server fails fast at startup otherwise). Ignored when
@@ -655,13 +670,6 @@ webhooks:
   existingSecret: ""
   # Key in the Secret that holds the webhook secret.
   secretKey: "webhook-secret"
-  # Internal URL override for webhook registration (WEBHOOK_INTERNAL_URL).
-  # Highest-priority source for the callback URL registered with Nextcloud,
-  # above nextcloud.mcpServerUrl and docker autodetection. Set this when
-  # Nextcloud must reach the MCP server at a cluster-internal Service URL
-  # that differs from the public mcpServerUrl.
-  # Example: http://my-release-nextcloud-mcp-server:8000
-  internalUrl: ""
 
 # Semantic Search Configuration
 # Enable semantic search with BM25 hybrid search and background synchronization
@@ -687,6 +695,14 @@ semanticSearch:
   # sparse-only into the same collection; vectorTag (hybrid) wins when a file
   # carries both. Set to "" to disable keyword-only indexing entirely.
   keywordTag: "keyword-index"
+  # Which file types tagged-file discovery indexes (VECTOR_SYNC_INDEXABLE_MIME_TYPES,
+  # comma-separated MIME types; app >= 0.195.0). Empty = the app default: PDF
+  # plus every format read with no external service (.docx/.xlsx/.pptx/.msg).
+  # Legacy/ODF types (application/msword, application/vnd.ms-excel,
+  # application/vnd.ms-powerpoint, application/vnd.oasis.opendocument.*) need
+  # documentProcessing.collabora.url; list them here explicitly to index them.
+  # Set "application/pdf" to restore PDF-only indexing.
+  indexableMimeTypes: ""
   # Optional cross-encoder reranking of search results (SEARCH_RERANK_*).
   # Off by default and opt-in PER REQUEST — enabling it here only makes the
   # capability available; callers still pass `rerank: true` (MCP tool argument
