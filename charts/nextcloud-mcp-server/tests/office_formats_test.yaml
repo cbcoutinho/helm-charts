@@ -1,0 +1,71 @@
+suite: office formats (Collabora conversion, indexable MIME types, webhooks)
+#
+# App >= 0.195.0 reads .docx/.xlsx/.pptx/.msg in-process, converts legacy/ODF
+# office files through a shared Collabora Online (ADR-039), and lets operators
+# choose which types vector sync indexes. Webhook REGISTRATION left the app
+# long ago -- Astrolabe delivers events itself -- so WEBHOOK_INTERNAL_URL must
+# never render again.
+#
+templates:
+  - templates/deployment.yaml
+  - templates/settings-configmap.yaml
+  - templates/secret.yaml
+
+tests:
+  - it: omits Collabora settings by default
+    template: templates/settings-configmap.yaml
+    asserts:
+      - notMatchRegex:
+          path: data["settings.toml"]
+          pattern: 'COLLABORA_'
+
+  - it: renders the Collabora URL and timeout when a URL is set
+    template: templates/settings-configmap.yaml
+    set:
+      documentProcessing.collabora.url: http://collabora:9980
+      documentProcessing.collabora.timeoutSeconds: 90
+    asserts:
+      - matchRegex:
+          path: data["settings.toml"]
+          pattern: 'COLLABORA_URL = "http://collabora:9980"'
+      - matchRegex:
+          path: data["settings.toml"]
+          pattern: 'COLLABORA_TIMEOUT_SECONDS = 90'
+
+  # The app reads an EMPTY list as "index nothing", so the chart's "" default
+  # must mean "keep the app default" -- the key must not render at all.
+  - it: leaves the indexable MIME list to the app by default
+    template: templates/settings-configmap.yaml
+    set:
+      semanticSearch.enabled: true
+    asserts:
+      - notMatchRegex:
+          path: data["settings.toml"]
+          pattern: 'VECTOR_SYNC_INDEXABLE_MIME_TYPES'
+
+  - it: renders an operator's indexable MIME list
+    template: templates/settings-configmap.yaml
+    set:
+      semanticSearch.enabled: true
+      semanticSearch.indexableMimeTypes: application/pdf,application/msword
+    asserts:
+      - matchRegex:
+          path: data["settings.toml"]
+          pattern: 'VECTOR_SYNC_INDEXABLE_MIME_TYPES = "application/pdf,application/msword"'
+
+  - it: never renders the removed webhook registration URL
+    template: templates/deployment.yaml
+    set:
+      webhooks.secret: a-webhook-secret-of-sufficient-length
+      webhooks.internalUrl: http://ignored:8000
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: WEBHOOK_SECRET
+          any: true
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: WEBHOOK_INTERNAL_URL
+          any: true

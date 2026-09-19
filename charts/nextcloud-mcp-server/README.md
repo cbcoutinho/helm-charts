@@ -219,27 +219,28 @@ The application exposes HTTP health check endpoints:
 
 There is no master switch — app `>= 0.151.0` removed `ENABLE_DOCUMENT_PROCESSING`, and each optional processor registers from its own `ENABLE_*` flag. Enable the processors you want directly; `documentProcessing.enabled` no longer exists.
 
+With app `>= 0.195.0`, `.docx`/`.xlsx`/`.pptx` and Outlook `.msg` are read in-process and need none of these. Legacy `.doc`/`.xls`/`.ppt` and ODF `.odt`/`.ods`/`.odp` are converted by a shared Collabora Online (coolwsd) instance, such as the one serving Nextcloud Office: set `documentProcessing.collabora.url`. coolwsd answers `convert-to` only for clients in its `net.post_allow` list, whose default covers private ranges.
+
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 | `documentProcessing.defaultProcessor` | Default processor | `unstructured` |
 | `documentProcessing.unstructured.enabled` | Enable Unstructured.io processor | `false` |
 | `documentProcessing.unstructured.apiUrl` | Unstructured API URL | `http://unstructured:8000` |
 | `documentProcessing.tesseract.enabled` | Enable Tesseract OCR | `false` |
+| `documentProcessing.collabora.url` | Collabora Online (coolwsd) base URL for legacy/ODF office files (`COLLABORA_URL`, app `>= 0.195.0`); empty = those types are not claimed | `""` |
+| `documentProcessing.collabora.timeoutSeconds` | Per-file `convert-to` request timeout (`COLLABORA_TIMEOUT_SECONDS`) | `60` |
 
 #### Webhooks (Optional)
 
-Nextcloud can push change events to the MCP server so vector sync reacts in near real-time instead of waiting for the next polling scan. As of app version **0.117.2** a webhook secret is **required** to enable webhooks ([GHSA-8vh3-g2qg-2h2c](https://github.com/cbcoutinho/nextcloud-mcp-server/security/advisories/GHSA-8vh3-g2qg-2h2c)).
+Change events reach the MCP server from the [Astrolabe](https://github.com/cbcoutinho/astrolabe) Nextcloud app. It subscribes to Nextcloud's events and POSTs each one to the server's `/webhooks/nextcloud` receiver with `Authorization: Bearer <secret>`, so vector sync reacts in near real-time instead of waiting for the next polling scan. The MCP server registers nothing with Nextcloud; set Astrolabe's `mcp_webhook_secret` system config to the same secret. A secret is **required** to enable the receiver ([GHSA-8vh3-g2qg-2h2c](https://github.com/cbcoutinho/nextcloud-mcp-server/security/advisories/GHSA-8vh3-g2qg-2h2c)). When **unset** the route is not mounted and vector sync relies on the periodic polling scanner.
 
-When a webhook secret is configured the server mounts the `/webhooks/nextcloud` receiver, registers webhooks with Nextcloud using `Authorization: Bearer <secret>`, and validates that header on every delivery. When **unset** the receiver route is not mounted, the receiver refuses requests (`503`), and registration is skipped — vector sync still works via the periodic polling scanner.
-
-These env vars are injected only into the API pod; the ingest worker (`ingest.splitWorker: true`) drains the queue and never handles webhooks.
+The secret is injected only into the API pod; the ingest worker (`ingest.splitWorker: true`) drains the queue and never handles webhooks.
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 | `webhooks.secret` | Inline webhook secret (`WEBHOOK_SECRET`). **Must be ≥16 characters.** Ignored if `existingSecret` is set | `""` |
 | `webhooks.existingSecret` | Use an existing Secret holding the webhook secret instead of creating one | `""` |
 | `webhooks.secretKey` | Key in the Secret that holds the webhook secret | `webhook-secret` |
-| `webhooks.internalUrl` | Internal callback URL registered with Nextcloud (`WEBHOOK_INTERNAL_URL`); wins over `nextcloud.mcpServerUrl` and autodetection | `""` |
 
 Generate a secret with e.g. `python -c "import secrets; print(secrets.token_urlsafe(32))"`.
 
@@ -258,6 +259,7 @@ Enable semantic search capabilities with BM25 hybrid search by deploying a vecto
 | `semanticSearch.excludedTags` | Comma-separated Nextcloud tag names to exclude from indexing (`EXCLUDED_TAGS`) | `""` |
 | `semanticSearch.vectorTag` | Nextcloud tag marking files for hybrid (dense + BM25 sparse) indexing (`VECTOR_SYNC_TAG`) | `"vector-index"` |
 | `semanticSearch.keywordTag` | Nextcloud tag marking files for keyword-only (BM25 sparse) indexing (`VECTOR_SYNC_KEYWORD_TAG`); set `""` to disable; hybrid wins when a file carries both | `"keyword-index"` |
+| `semanticSearch.indexableMimeTypes` | Comma-separated MIME types that tagged-file discovery indexes (`VECTOR_SYNC_INDEXABLE_MIME_TYPES`, app `>= 0.195.0`). Empty keeps the app default: PDF, `.docx`/`.xlsx`/`.pptx`, `.msg`. Legacy/ODF types need `documentProcessing.collabora.url` | `""` |
 | `semanticSearch.rerank.enabled` | Make cross-encoder reranking available (`SEARCH_RERANK_ENABLED`). Requires a gateway — see note below | `false` |
 | `semanticSearch.rerank.model` | Provider-namespaced reranker model id (`SEARCH_RERANK_MODEL`) | `"BAAI/bge-reranker-v2-m3"` |
 | `semanticSearch.rerank.poolSize` | Retrieval candidates to rerank (`SEARCH_RERANK_POOL_SIZE`) | `200` |
