@@ -298,7 +298,7 @@ procrastinate is **opt-in**. By default document processing runs in-process via 
 OAuth/OIDC *server* leg — `NEXTCLOUD_MCP_SERVER_URL`,
 `NEXTCLOUD_PUBLIC_ISSUER_URL`, `NEXTCLOUD_OIDC_SCOPES`,
 `NEXTCLOUD_OIDC_CLIENT_ID`/`_SECRET`, `OIDC_DISCOVERY_URL` — plus
-`WEBHOOK_SECRET`/`WEBHOOK_INTERNAL_URL` go to the API pod only. The worker never
+`WEBHOOK_SECRET` go to the API pod only. The worker never
 runs the HTTP/OAuth stack; it authenticates to Nextcloud with the app password it
 decrypts from the database, so it keeps `MCP_DEPLOYMENT_MODE`, `TOKEN_STORAGE_DB`,
 `TOKEN_ENCRYPTION_KEY`, `DATABASE_URL`, the single-user BasicAuth credentials, and
