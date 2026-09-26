@@ -4,6 +4,51 @@ entries:
   - annotations:
       artifacthub.io/changes: |
         - kind: changed
+          description: "update helm release ollama to v1.84.0"
+      grafana_dashboard: "true"
+      grafana_dashboard_folder: Nextcloud MCP
+    apiVersion: v2
+    appVersion: 0.195.1
+    created: "2026-09-26T11:48:27.937695903Z"
+    dependencies:
+    - condition: qdrant.networkMode.deploySubchart
+      name: qdrant
+      repository: https://qdrant.github.io/qdrant-helm
+      version: 1.19.1
+    - condition: ollama.enabled
+      name: ollama
+      repository: https://otwld.github.io/ollama-helm
+      version: 1.84.0
+    description: A Helm chart for deploying Nextcloud MCP Server - enables AI assistants
+      to interact with Nextcloud
+    digest: 24b8b2a3c75b4ad68fea605c4cea987b99a45b53b14166e56b6cce7fc55e4e9a
+    home: https://github.com/cbcoutinho/nextcloud-mcp-server
+    icon: https://raw.githubusercontent.com/nextcloud/server/master/core/img/logo/logo.svg
+    keywords:
+    - nextcloud
+    - mcp
+    - model-context-protocol
+    - llm
+    - ai
+    - claude
+    - webdav
+    - caldav
+    - carddav
+    - helm
+    kubeVersion: '>=1.21.0-0'
+    maintainers:
+    - email: chris@coutinho.io
+      name: Chris Coutinho
+    name: nextcloud-mcp-server
+    sources:
+    - https://github.com/cbcoutinho/nextcloud-mcp-server
+    type: application
+    urls:
+    - https://github.com/cbcoutinho/helm-charts/releases/download/nextcloud-mcp-server-0.104.15/nextcloud-mcp-server-0.104.15.tgz
+    version: 0.104.15
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: changed
           description: "update ghcr.io/cbcoutinho/nextcloud-mcp-server docker tag to v0.195.1"
       grafana_dashboard: "true"
       grafana_dashboard_folder: Nextcloud MCP
@@ -7768,4 +7813,4 @@ entries:
     urls:
     - https://github.com/cbcoutinho/helm-charts/releases/download/nextcloud-mcp-server-0.59.1/nextcloud-mcp-server-0.59.1.tgz
     version: 0.59.1
-generated: "2026-09-23T16:55:10.133116825Z"
+generated: "2026-09-26T11:48:27.938098547Z"
