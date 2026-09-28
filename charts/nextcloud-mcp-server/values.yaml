@@ -704,7 +704,7 @@ semanticSearch:
     # Provider-namespaced reranker model id, routed by the gateway on the
     # "<provider>/" prefix — e.g. "cohere/rerank-v3.5" for a hosted reranker, or
     # a cross-encoder you serve yourself.
-    model: "BAAI/bge-reranker-v2-m3"
+    model: "local/BAAI/bge-reranker-v2-m3"
     # How many retrieval candidates to rerank. Reranking can only reorder what
     # retrieval supplied, so this — not the caller's `limit` — bounds how much
     # it can improve; a deeper pool costs proportionally more gateway work per
@@ -718,6 +718,30 @@ semanticSearch:
     # rerank burst turns a quality feature into a site-wide latency cliff.
     # Searches that cannot acquire a slot fall back to retrieval order.
     maxConcurrency: 1
+  # Subject access request (SAR) cases and redacted export (ADR-040):
+  # the sar_case_* MCP tools, /api/v1/sar/*, the sar.read/sar.write scopes, and
+  # `sar_available` on GET /api/v1/status, which is what makes Astrolabe show
+  # its SAR page. Opt-in per deployment: enable it only for the tenants that
+  # handle subject access requests. Needs server 0.198.0 or later (earlier
+  # releases served SAR implicitly whenever a gateway was configured).
+  sar:
+    # REQUIRES the model gateway: names are detected through its /v1/ner. As
+    # with rerank, EMBEDDING_GATEWAY_URL comes from your private overlay via
+    # `extraEnv`; the server refuses to start with this true and no gateway.
+    enabled: false
+    # Name detection (NER) used to redact third parties in exports.
+    ner:
+      # Provider-namespaced model id, routed by the gateway on its prefix.
+      model: "local/urchade/gliner_multi_pii-v1"
+      # Per-request budget. Export runs in the background, so this only has to
+      # cover one batch on the slowest backend.
+      timeoutSeconds: 120
+      # Texts (up to 2,000 characters each) per /v1/ner request. Keep it small
+      # on a CPU backend; raise it (e.g. 32) on a GPU.
+      batchSize: 8
+      # Minimum confidence, in (0, 1], for a span to count as a person. Lower
+      # raises recall at the cost of over-redaction (the safe direction).
+      threshold: 0.5
 
 # Ingest queue backend (Deck #183).
 #

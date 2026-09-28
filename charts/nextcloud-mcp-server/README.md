@@ -259,10 +259,15 @@ Enable semantic search capabilities with BM25 hybrid search by deploying a vecto
 | `semanticSearch.vectorTag` | Nextcloud tag marking files for hybrid (dense + BM25 sparse) indexing (`VECTOR_SYNC_TAG`) | `"vector-index"` |
 | `semanticSearch.keywordTag` | Nextcloud tag marking files for keyword-only (BM25 sparse) indexing (`VECTOR_SYNC_KEYWORD_TAG`); set `""` to disable; hybrid wins when a file carries both | `"keyword-index"` |
 | `semanticSearch.rerank.enabled` | Make cross-encoder reranking available (`SEARCH_RERANK_ENABLED`). Requires a gateway — see note below | `false` |
-| `semanticSearch.rerank.model` | Provider-namespaced reranker model id (`SEARCH_RERANK_MODEL`) | `"BAAI/bge-reranker-v2-m3"` |
+| `semanticSearch.rerank.model` | Provider-namespaced reranker model id (`SEARCH_RERANK_MODEL`) | `"local/BAAI/bge-reranker-v2-m3"` |
 | `semanticSearch.rerank.poolSize` | Retrieval candidates to rerank (`SEARCH_RERANK_POOL_SIZE`) | `200` |
 | `semanticSearch.rerank.timeoutSeconds` | Rerank request budget; on expiry the search degrades to retrieval order (`SEARCH_RERANK_TIMEOUT_SECONDS`) | `30.0` |
 | `semanticSearch.rerank.maxConcurrency` | Concurrent rerank calls per pod (`SEARCH_RERANK_MAX_CONCURRENCY`) | `1` |
+| `semanticSearch.sar.enabled` | Serve subject access request cases and redacted export (`SAR_ENABLED`, server 0.198.0+). Requires a gateway — see note below | `false` |
+| `semanticSearch.sar.ner.model` | Name-detection model for redaction, gateway-namespaced (`NER_MODEL`) | `"local/urchade/gliner_multi_pii-v1"` |
+| `semanticSearch.sar.ner.timeoutSeconds` | Per-request name-detection budget (`NER_TIMEOUT_SECONDS`) | `120` |
+| `semanticSearch.sar.ner.batchSize` | Texts per name-detection request; raise on a GPU backend (`NER_BATCH_SIZE`) | `8` |
+| `semanticSearch.sar.ner.threshold` | Minimum confidence, in (0, 1], for a span to count as a person (`NER_THRESHOLD`) | `0.5` |
 
 **Reranking** is off by default and opt-in **per request** — enabling it in
 values only makes the capability available; callers still pass `rerank: true`
@@ -276,6 +281,16 @@ URL and M2M credentials (`EMBEDDING_GATEWAY_URL` / `_TOKEN_URL` / `_CLIENT_ID` /
 supply them from your private overlay via `extraEnv`. Setting
 `semanticSearch.rerank.enabled: true` without `EMBEDDING_GATEWAY_URL` makes the
 server raise at startup rather than silently serve unreranked results.
+
+**Subject access requests (SAR)** are off by default and enabled **per
+deployment** with `semanticSearch.sar.enabled: true`, for the tenants that
+handle subject access requests. That turns on the `sar_case_*` MCP tools, the
+`/api/v1/sar/*` routes, the `sar.read`/`sar.write` scopes, and
+`sar_available` on `GET /api/v1/status`, which is what makes Astrolabe show its
+SAR page. Like reranking it **requires the model gateway** (third-party names
+are detected through its `/v1/ner`), supplied via `extraEnv`; the server
+refuses to start with SAR enabled and no gateway. Needs server 0.198.0 or
+later: earlier releases served SAR whenever a gateway was configured.
 
 **Ingest Queue Configuration (Deck #183):**
 

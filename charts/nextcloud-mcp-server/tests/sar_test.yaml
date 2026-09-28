@@ -1,0 +1,67 @@
+suite: subject access request gate
+#
+# SAR is opt-in per deployment (server 0.198.0+): only tenants that handle
+# subject access requests turn it on. The failure worth guarding is the quiet
+# one -- SAR_ENABLED leaking in on a tenant that never asked for it (every
+# tenant then sees a SAR page), or the NER knobs missing on one that did.
+#
+templates:
+  - templates/settings-configmap.yaml
+
+tests:
+  # Semantic search off => no SAR surface at all: SAR searches and reads the index.
+  - it: emits nothing when semantic search is disabled
+    set:
+      semanticSearch.sar.enabled: true
+    asserts:
+      - notMatchRegex:
+          path: data["settings.toml"]
+          pattern: 'SAR_ENABLED|NER_'
+
+  # Off by default, rendered explicitly so "off" is distinguishable from "this
+  # chart is too old to know about SAR".
+  - it: renders the disabled flag without the NER knobs by default
+    set:
+      semanticSearch.enabled: true
+    asserts:
+      - matchRegex:
+          path: data["settings.toml"]
+          pattern: 'SAR_ENABLED = false'
+      - notMatchRegex:
+          path: data["settings.toml"]
+          pattern: 'NER_'
+
+  - it: renders the flag and every NER knob once enabled
+    set:
+      semanticSearch.enabled: true
+      semanticSearch.sar.enabled: true
+    asserts:
+      - matchRegex:
+          path: data["settings.toml"]
+          pattern: 'SAR_ENABLED = true'
+      - matchRegex:
+          path: data["settings.toml"]
+          pattern: 'NER_MODEL = "local/urchade/gliner_multi_pii-v1"'
+      - matchRegex:
+          path: data["settings.toml"]
+          pattern: 'NER_TIMEOUT_SECONDS = 120'
+      - matchRegex:
+          path: data["settings.toml"]
+          pattern: 'NER_BATCH_SIZE = 8'
+      - matchRegex:
+          path: data["settings.toml"]
+          pattern: 'NER_THRESHOLD = 0.5'
+
+  - it: passes operator overrides through
+    set:
+      semanticSearch.enabled: true
+      semanticSearch.sar.enabled: true
+      semanticSearch.sar.ner.batchSize: 32
+      semanticSearch.sar.ner.threshold: 0.4
+    asserts:
+      - matchRegex:
+          path: data["settings.toml"]
+          pattern: 'NER_BATCH_SIZE = 32'
+      - matchRegex:
+          path: data["settings.toml"]
+          pattern: 'NER_THRESHOLD = 0.4'
