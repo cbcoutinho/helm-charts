@@ -14,6 +14,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable resource limits
 - Grafana dashboard annotations
 
+## nextcloud-mcp-server-0.105.0 (2026-09-28)
+
+### Feat
+
+- **helm**: opt in to subject access requests per deployment
+
+### Fix
+
+- **helm**: default the reranker to the gateway's namespaced model id
+
 ## nextcloud-mcp-server-0.104.16 (2026-09-27)
 
 ## nextcloud-mcp-server-0.104.15 (2026-09-26)
