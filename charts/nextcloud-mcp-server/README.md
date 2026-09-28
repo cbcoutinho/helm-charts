@@ -259,7 +259,7 @@ Enable semantic search capabilities with BM25 hybrid search by deploying a vecto
 | `semanticSearch.vectorTag` | Nextcloud tag marking files for hybrid (dense + BM25 sparse) indexing (`VECTOR_SYNC_TAG`) | `"vector-index"` |
 | `semanticSearch.keywordTag` | Nextcloud tag marking files for keyword-only (BM25 sparse) indexing (`VECTOR_SYNC_KEYWORD_TAG`); set `""` to disable; hybrid wins when a file carries both | `"keyword-index"` |
 | `semanticSearch.rerank.enabled` | Make cross-encoder reranking available (`SEARCH_RERANK_ENABLED`). Requires a gateway — see note below | `false` |
-| `semanticSearch.rerank.model` | Provider-namespaced reranker model id (`SEARCH_RERANK_MODEL`) | `"BAAI/bge-reranker-v2-m3"` |
+| `semanticSearch.rerank.model` | Provider-namespaced reranker model id (`SEARCH_RERANK_MODEL`) | `"local/BAAI/bge-reranker-v2-m3"` |
 | `semanticSearch.rerank.poolSize` | Retrieval candidates to rerank (`SEARCH_RERANK_POOL_SIZE`) | `200` |
 | `semanticSearch.rerank.timeoutSeconds` | Rerank request budget; on expiry the search degrades to retrieval order (`SEARCH_RERANK_TIMEOUT_SECONDS`) | `30.0` |
 | `semanticSearch.rerank.maxConcurrency` | Concurrent rerank calls per pod (`SEARCH_RERANK_MAX_CONCURRENCY`) | `1` |

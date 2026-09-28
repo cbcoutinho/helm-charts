@@ -704,7 +704,7 @@ semanticSearch:
     # Provider-namespaced reranker model id, routed by the gateway on the
     # "<provider>/" prefix — e.g. "cohere/rerank-v3.5" for a hosted reranker, or
     # a cross-encoder you serve yourself.
-    model: "BAAI/bge-reranker-v2-m3"
+    model: "local/BAAI/bge-reranker-v2-m3"
     # How many retrieval candidates to rerank. Reranking can only reorder what
     # retrieval supplied, so this — not the caller's `limit` — bounds how much
     # it can improve; a deeper pool costs proportionally more gateway work per
