@@ -92,6 +92,13 @@ SEARCH_RERANK_POOL_SIZE = {{ .Values.semanticSearch.rerank.poolSize }}
 SEARCH_RERANK_TIMEOUT_SECONDS = {{ .Values.semanticSearch.rerank.timeoutSeconds }}
 SEARCH_RERANK_MAX_CONCURRENCY = {{ .Values.semanticSearch.rerank.maxConcurrency }}
 {{- end }}
+SAR_ENABLED = {{ .Values.semanticSearch.sar.enabled }}
+{{- if .Values.semanticSearch.sar.enabled }}
+NER_MODEL = {{ .Values.semanticSearch.sar.ner.model | quote }}
+NER_TIMEOUT_SECONDS = {{ .Values.semanticSearch.sar.ner.timeoutSeconds }}
+NER_BATCH_SIZE = {{ .Values.semanticSearch.sar.ner.batchSize }}
+NER_THRESHOLD = {{ .Values.semanticSearch.sar.ner.threshold }}
+{{- end }}
 {{- end }}
 # Observability
 METRICS_ENABLED = {{ .Values.observability.metrics.enabled }}
