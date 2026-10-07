@@ -35,7 +35,7 @@ annotations:
       description: "update anthropics/claude-code-action action to v1.0.240"
 dependencies:
   - name: qdrant
-    version: "1.19.1"
+    version: "1.19.2"
     repository: https://qdrant.github.io/qdrant-helm
     condition: qdrant.networkMode.deploySubchart
   - name: ollama
