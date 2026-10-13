@@ -33,7 +33,7 @@ annotations:
       description: "update helm release ollama to v1.88.0"
 dependencies:
   - name: qdrant
-    version: "1.19.1"
+    version: "1.19.2"
     repository: https://qdrant.github.io/qdrant-helm
     condition: qdrant.networkMode.deploySubchart
   - name: ollama
