@@ -4,6 +4,53 @@ entries:
   - annotations:
       artifacthub.io/changes: |
         - kind: changed
+          description: "update ghcr.io/cbcoutinho/nextcloud-mcp-server docker tag to v0.199.4"
+        - kind: changed
+          description: "update helm release qdrant to v1.19.2"
+      grafana_dashboard: "true"
+      grafana_dashboard_folder: Nextcloud MCP
+    apiVersion: v2
+    appVersion: 0.199.4
+    created: "2026-10-13T05:48:52.260190606Z"
+    dependencies:
+    - condition: qdrant.networkMode.deploySubchart
+      name: qdrant
+      repository: https://qdrant.github.io/qdrant-helm
+      version: 1.19.2
+    - condition: ollama.enabled
+      name: ollama
+      repository: https://otwld.github.io/ollama-helm
+      version: 1.88.0
+    description: A Helm chart for deploying Nextcloud MCP Server - enables AI assistants
+      to interact with Nextcloud
+    digest: 4a017ec923c911c5e202b9f73e6a60fb35acc8634e2c9a3e4211336a7518147a
+    home: https://github.com/cbcoutinho/nextcloud-mcp-server
+    icon: https://raw.githubusercontent.com/nextcloud/server/master/core/img/logo/logo.svg
+    keywords:
+    - nextcloud
+    - mcp
+    - model-context-protocol
+    - llm
+    - ai
+    - claude
+    - webdav
+    - caldav
+    - carddav
+    - helm
+    kubeVersion: '>=1.21.0-0'
+    maintainers:
+    - email: chris@coutinho.io
+      name: Chris Coutinho
+    name: nextcloud-mcp-server
+    sources:
+    - https://github.com/cbcoutinho/nextcloud-mcp-server
+    type: application
+    urls:
+    - https://github.com/cbcoutinho/helm-charts/releases/download/nextcloud-mcp-server-0.105.6/nextcloud-mcp-server-0.105.6.tgz
+    version: 0.105.6
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: changed
           description: "update helm release ollama to v1.88.0"
       grafana_dashboard: "true"
       grafana_dashboard_folder: Nextcloud MCP
@@ -8091,4 +8138,4 @@ entries:
     urls:
     - https://github.com/cbcoutinho/helm-charts/releases/download/nextcloud-mcp-server-0.59.1/nextcloud-mcp-server-0.59.1.tgz
     version: 0.59.1
-generated: "2026-10-12T14:40:00.161764558Z"
+generated: "2026-10-13T05:48:52.260577239Z"
