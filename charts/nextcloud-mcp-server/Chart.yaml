@@ -33,7 +33,7 @@ annotations:
       description: "update ghcr.io/cbcoutinho/nextcloud-mcp-server docker tag to v0.201.1"
 dependencies:
   - name: qdrant
-    version: "1.19.2"
+    version: "1.20.0"
     repository: https://qdrant.github.io/qdrant-helm
     condition: qdrant.networkMode.deploySubchart
   - name: ollama
