@@ -74,6 +74,11 @@ DOCUMENT_OCR_PAGE_FRACTION = {{ .Values.documentPipeline.ocr.pageFraction }}
 DOCUMENT_OCR_MIN_PAGE_CHARS = {{ .Values.documentPipeline.ocr.minPageChars }}
 DOCUMENT_OCR_DETECT_SCANNED = {{ .Values.documentPipeline.ocr.detectScanned }}
 {{- end }}
+{{- with .Values.documentProcessing.collabora.url }}
+# Legacy/ODF office formats via a shared Collabora Online (ADR-039)
+COLLABORA_URL = {{ . | quote }}
+COLLABORA_TIMEOUT_SECONDS = {{ $.Values.documentProcessing.collabora.timeoutSeconds }}
+{{- end }}
 # Semantic search / vector sync
 ENABLE_SEMANTIC_SEARCH = {{ .Values.semanticSearch.enabled }}
 {{- if .Values.semanticSearch.enabled }}
@@ -85,6 +90,11 @@ EXCLUDED_TAGS = {{ . | quote }}
 {{- end }}
 VECTOR_SYNC_TAG = {{ required "semanticSearch.vectorTag must be a non-empty Nextcloud tag name (the app rejects an empty VECTOR_SYNC_TAG)" .Values.semanticSearch.vectorTag | quote }}
 VECTOR_SYNC_KEYWORD_TAG = {{ .Values.semanticSearch.keywordTag | quote }}
+{{- /* Omitted when empty: the app reads an EMPTY list as "index nothing", so
+       "" must mean "keep the app default", never be written through. */}}
+{{- with .Values.semanticSearch.indexableMimeTypes }}
+VECTOR_SYNC_INDEXABLE_MIME_TYPES = {{ . | quote }}
+{{- end }}
 SEARCH_RERANK_ENABLED = {{ .Values.semanticSearch.rerank.enabled }}
 {{- if .Values.semanticSearch.rerank.enabled }}
 SEARCH_RERANK_MODEL = {{ .Values.semanticSearch.rerank.model | quote }}
