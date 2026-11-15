@@ -4,6 +4,55 @@ entries:
   - annotations:
       artifacthub.io/changes: |
         - kind: changed
+          description: "update ghcr.io/cbcoutinho/nextcloud-mcp-server docker tag to v0.211.1"
+        - kind: changed
+          description: "update anthropics/claude-code-action action to v1.0.276"
+        - kind: changed
+          description: "update dependency helm to v4.3.2"
+      grafana_dashboard: "true"
+      grafana_dashboard_folder: Nextcloud MCP
+    apiVersion: v2
+    appVersion: 0.211.1
+    created: "2026-11-15T20:15:22.337216867Z"
+    dependencies:
+    - condition: qdrant.networkMode.deploySubchart
+      name: qdrant
+      repository: https://qdrant.github.io/qdrant-helm
+      version: 1.20.1
+    - condition: ollama.enabled
+      name: ollama
+      repository: https://otwld.github.io/ollama-helm
+      version: 1.95.0
+    description: A Helm chart for deploying Nextcloud MCP Server - enables AI assistants
+      to interact with Nextcloud
+    digest: 979a4b42b3e05945fceab1c8767b3f71216aa02c0364675d7928bd259ec83910
+    home: https://github.com/cbcoutinho/nextcloud-mcp-server
+    icon: https://raw.githubusercontent.com/nextcloud/server/master/core/img/logo/logo.svg
+    keywords:
+    - nextcloud
+    - mcp
+    - model-context-protocol
+    - llm
+    - ai
+    - claude
+    - webdav
+    - caldav
+    - carddav
+    - helm
+    kubeVersion: '>=1.21.0-0'
+    maintainers:
+    - email: chris@coutinho.io
+      name: Chris Coutinho
+    name: nextcloud-mcp-server
+    sources:
+    - https://github.com/cbcoutinho/nextcloud-mcp-server
+    type: application
+    urls:
+    - https://github.com/cbcoutinho/helm-charts/releases/download/nextcloud-mcp-server-0.105.26/nextcloud-mcp-server-0.105.26.tgz
+    version: 0.105.26
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: changed
           description: "update docker.io/qdrant/qdrant docker tag to v1.20.1"
       grafana_dashboard: "true"
       grafana_dashboard_folder: Nextcloud MCP
@@ -9015,4 +9064,4 @@ entries:
     urls:
     - https://github.com/cbcoutinho/helm-charts/releases/download/nextcloud-mcp-server-0.59.1/nextcloud-mcp-server-0.59.1.tgz
     version: 0.59.1
-generated: "2026-11-14T10:33:07.055362061Z"
+generated: "2026-11-15T20:15:22.33752728Z"
