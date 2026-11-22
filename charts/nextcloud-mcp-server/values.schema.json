@@ -59,7 +59,8 @@
               "maximum": 1
             },
             "minPageChars": { "type": "integer", "minimum": 0 },
-            "detectScanned": { "type": "boolean" }
+            "detectScanned": { "type": "boolean" },
+            "images": { "type": "boolean" }
           }
         }
       }

@@ -73,6 +73,9 @@ DOCUMENT_OCR_MIN_TEXT_QUALITY = {{ .Values.documentPipeline.ocr.minTextQuality }
 DOCUMENT_OCR_PAGE_FRACTION = {{ .Values.documentPipeline.ocr.pageFraction }}
 DOCUMENT_OCR_MIN_PAGE_CHARS = {{ .Values.documentPipeline.ocr.minPageChars }}
 DOCUMENT_OCR_DETECT_SCANNED = {{ .Values.documentPipeline.ocr.detectScanned }}
+{{- if .Values.documentPipeline.ocr.images }}
+DOCUMENT_OCR_IMAGES = true
+{{- end }}
 {{- end }}
 # Semantic search / vector sync
 ENABLE_SEMANTIC_SEARCH = {{ .Values.semanticSearch.enabled }}

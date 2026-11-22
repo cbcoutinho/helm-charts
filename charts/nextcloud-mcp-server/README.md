@@ -454,6 +454,7 @@ OCR backend selection is independent of the embedding provider — you can embed
 | `documentPipeline.ocr.pageFraction` | Escalation: fraction of sampled pages `[0,1]` that must be OCR-worthy before the whole doc escalates | `0.5` |
 | `documentPipeline.ocr.minPageChars` | Escalation: a page with fewer extracted chars than this counts as near-empty | `16` |
 | `documentPipeline.ocr.detectScanned` | Escalation: run raster-image analysis to detect scanned pages (OCR-enabled only) | `true` |
+| `documentPipeline.ocr.images` | Also OCR standalone PNG/JPEG/WebP files (`DOCUMENT_OCR_IMAGES`; OCR-enabled only; needs a server release that includes it) | `false` |
 
 **Enable OCR via Mistral directly:**
 

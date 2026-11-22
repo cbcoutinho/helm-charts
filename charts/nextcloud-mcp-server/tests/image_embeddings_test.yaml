@@ -68,3 +68,28 @@ tests:
       semanticSearch.imageEmbeddings.scoreThreshold: 1.5
     asserts:
       - failedTemplate: {}
+
+  - it: omits standalone-image OCR by default
+    set:
+      documentPipeline.ocr.enabled: true
+    asserts:
+      - notMatchRegex:
+          path: data["settings.toml"]
+          pattern: 'DOCUMENT_OCR_IMAGES'
+
+  - it: ignores standalone-image OCR while OCR is disabled
+    set:
+      documentPipeline.ocr.images: true
+    asserts:
+      - notMatchRegex:
+          path: data["settings.toml"]
+          pattern: 'DOCUMENT_OCR_IMAGES'
+
+  - it: renders standalone-image OCR when opted in
+    set:
+      documentPipeline.ocr.enabled: true
+      documentPipeline.ocr.images: true
+    asserts:
+      - matchRegex:
+          path: data["settings.toml"]
+          pattern: '(?m)^DOCUMENT_OCR_IMAGES = true$'

@@ -1059,6 +1059,10 @@ documentPipeline:
     # Run raster-image analysis to detect scanned pages (only active when OCR
     # is enabled). Off makes escalation rely on char-count + text-quality only.
     detectScanned: true
+    # Also OCR standalone PNG/JPEG/WebP files through the same backend
+    # (DOCUMENT_OCR_IMAGES). Opt-in; only applies when enabled is true. Needs a
+    # server release that includes it (nextcloud-mcp-server PR #1891).
+    images: false
 
 # Qdrant Vector Database Configuration
 # Four deployment modes available:
