@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft-07/schema#",
   "title": "nextcloud-mcp-server values",
-  "description": "Scoped schema. Only the documentPipeline block is strictly validated (additionalProperties:false) so consolidated-OCR drift — e.g. the removed ocr.inclusterEnabled/inclusterModel keys — is rejected at lint/template time. All other top-level keys (subcharts, extraEnv, etc.) are intentionally left unconstrained.",
+  "description": "Scoped schema. Only the documentPipeline and semanticSearch.imageEmbeddings blocks are strictly validated (additionalProperties:false) so consolidated-OCR drift — e.g. the removed ocr.inclusterEnabled/inclusterModel keys — is rejected at lint/template time. All other top-level keys (subcharts, extraEnv, etc.) are intentionally left unconstrained.",
   "type": "object",
   "properties": {
     "documentPipeline": {
@@ -60,6 +60,21 @@
             },
             "minPageChars": { "type": "integer", "minimum": 0 },
             "detectScanned": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "semanticSearch": {
+      "type": "object",
+      "properties": {
+        "imageEmbeddings": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "model": { "type": "string" },
+            "dimensions": { "type": ["integer", "null"], "minimum": 1 },
+            "scoreThreshold": { "type": ["number", "null"], "minimum": -1, "maximum": 1 },
+            "maxSourceBytes": { "type": ["integer", "null"], "minimum": 1 }
           }
         }
       }

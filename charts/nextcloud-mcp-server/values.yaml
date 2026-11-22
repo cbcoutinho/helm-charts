@@ -718,6 +718,29 @@ semanticSearch:
     # rerank burst turns a quality feature into a site-wide latency cliff.
     # Searches that cannot acquire a slot fall back to retrieval order.
     maxConcurrency: 1
+  # Image embeddings (ADR-042, IMAGE_EMBEDDING_* / IMAGE_SEARCH_*). NOT YET
+  # FUNCTIONAL: through server v0.215.0 the server only validates the model;
+  # nothing indexes or searches images until later ADR-042 steps ship. Values
+  # are forward-compatible (older servers ignore unknown settings).
+  # Off by default and there is no separate enable flag: an empty model means
+  # off. Every indexed image is a PAID embedding call that sends the image bytes
+  # to the provider. Uses the same provider as text embeddings
+  # (EMBEDDING_PROVIDER); there is no second provider slot. Each key is only
+  # rendered when set.
+  imageEmbeddings:
+    # Model id on the embedding provider, e.g. "bedrock/cohere.embed-v4:0" via
+    # the gateway; "cohere.embed-v4:0", "eu.cohere.embed-v4:0" or
+    # "amazon.titan-embed-image-v1" on Bedrock direct.
+    model: ""
+    # Optional output width; must be one the model supports
+    # (Cohere v4: 256/512/1024/1536; Titan: 256/384/1024).
+    dimensions: null
+    # Minimum image-search score in [-1, 1]. Required for the feature to turn
+    # on (no default floor ships). Server support lands after v0.215.0.
+    scoreThreshold: null
+    # Max source image size in bytes (server default 50 MB). Server support
+    # lands with ADR-042 step 4.
+    maxSourceBytes: null
   # Subject access request (SAR) cases and redacted export (ADR-040):
   # the sar_case_* MCP tools, /api/v1/sar/*, the sar.read/sar.write scopes, and
   # `sar_available` on GET /api/v1/status, which is what makes Astrolabe show

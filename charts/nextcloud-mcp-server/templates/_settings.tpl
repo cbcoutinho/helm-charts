@@ -92,6 +92,20 @@ SEARCH_RERANK_POOL_SIZE = {{ .Values.semanticSearch.rerank.poolSize }}
 SEARCH_RERANK_TIMEOUT_SECONDS = {{ .Values.semanticSearch.rerank.timeoutSeconds }}
 SEARCH_RERANK_MAX_CONCURRENCY = {{ .Values.semanticSearch.rerank.maxConcurrency }}
 {{- end }}
+{{- with .Values.semanticSearch.imageEmbeddings }}
+{{- if .model }}
+IMAGE_EMBEDDING_MODEL = {{ .model | quote }}
+{{- end }}
+{{- if not (kindIs "invalid" .dimensions) }}
+IMAGE_EMBEDDING_DIMENSIONS = {{ int .dimensions }}
+{{- end }}
+{{- if not (kindIs "invalid" .scoreThreshold) }}
+IMAGE_SEARCH_SCORE_THRESHOLD = {{ float64 .scoreThreshold }}
+{{- end }}
+{{- if not (kindIs "invalid" .maxSourceBytes) }}
+IMAGE_EMBEDDING_MAX_SOURCE_BYTES = {{ int64 .maxSourceBytes }}
+{{- end }}
+{{- end }}
 SAR_ENABLED = {{ .Values.semanticSearch.sar.enabled }}
 {{- if .Values.semanticSearch.sar.enabled }}
 NER_MODEL = {{ .Values.semanticSearch.sar.ner.model | quote }}

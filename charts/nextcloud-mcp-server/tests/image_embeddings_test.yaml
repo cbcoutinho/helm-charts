@@ -1,0 +1,70 @@
+suite: image embeddings
+#
+# Off by default and paid per image: nothing may render unless set, and each
+# optional key renders independently with the right TOML type.
+#
+templates:
+  - templates/settings-configmap.yaml
+
+tests:
+  - it: emits nothing by default
+    set:
+      semanticSearch.enabled: true
+    asserts:
+      - notMatchRegex:
+          path: data["settings.toml"]
+          pattern: 'IMAGE_'
+
+  - it: emits nothing when semantic search is disabled
+    set:
+      semanticSearch.imageEmbeddings.model: "bedrock/cohere.embed-v4:0"
+    asserts:
+      - notMatchRegex:
+          path: data["settings.toml"]
+          pattern: 'IMAGE_'
+
+  - it: renders only the model when only the model is set
+    set:
+      semanticSearch.enabled: true
+      semanticSearch.imageEmbeddings.model: "bedrock/cohere.embed-v4:0"
+    asserts:
+      - matchRegex:
+          path: data["settings.toml"]
+          pattern: 'IMAGE_EMBEDDING_MODEL = "bedrock/cohere.embed-v4:0"'
+      - notMatchRegex:
+          path: data["settings.toml"]
+          pattern: 'IMAGE_EMBEDDING_DIMENSIONS|IMAGE_SEARCH_SCORE_THRESHOLD|IMAGE_EMBEDDING_MAX_SOURCE_BYTES'
+
+  - it: renders every key with bare numeric types
+    set:
+      semanticSearch.enabled: true
+      semanticSearch.imageEmbeddings.model: "cohere.embed-v4:0"
+      semanticSearch.imageEmbeddings.dimensions: 1024
+      semanticSearch.imageEmbeddings.scoreThreshold: 0.25
+      semanticSearch.imageEmbeddings.maxSourceBytes: 52428800
+    asserts:
+      - matchRegex:
+          path: data["settings.toml"]
+          pattern: '(?m)^IMAGE_EMBEDDING_DIMENSIONS = 1024$'
+      - matchRegex:
+          path: data["settings.toml"]
+          pattern: '(?m)^IMAGE_SEARCH_SCORE_THRESHOLD = 0.25$'
+      - matchRegex:
+          path: data["settings.toml"]
+          pattern: '(?m)^IMAGE_EMBEDDING_MAX_SOURCE_BYTES = 52428800$'
+
+  # 0 is a legitimate threshold; it must not be dropped as "unset".
+  - it: keeps a zero score threshold
+    set:
+      semanticSearch.enabled: true
+      semanticSearch.imageEmbeddings.scoreThreshold: 0
+    asserts:
+      - matchRegex:
+          path: data["settings.toml"]
+          pattern: '(?m)^IMAGE_SEARCH_SCORE_THRESHOLD = 0$'
+
+  - it: rejects a score threshold outside [-1, 1]
+    set:
+      semanticSearch.imageEmbeddings.scoreThreshold: 1.5
+    asserts:
+      - failedTemplate: {}
