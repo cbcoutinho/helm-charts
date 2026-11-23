@@ -14,6 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable resource limits
 - Grafana dashboard annotations
 
+## nextcloud-mcp-server-0.106.0 (2026-11-23)
+
+### Feat
+
+- **helm**: expose standalone-image OCR toggle (documentPipeline.ocr.images)
+- **helm**: expose image-embedding settings (ADR-042)
+
 ## nextcloud-mcp-server-0.105.31 (2026-11-18)
 
 ## nextcloud-mcp-server-0.105.30 (2026-11-17)
