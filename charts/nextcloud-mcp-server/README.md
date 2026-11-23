@@ -263,6 +263,10 @@ Enable semantic search capabilities with BM25 hybrid search by deploying a vecto
 | `semanticSearch.rerank.poolSize` | Retrieval candidates to rerank (`SEARCH_RERANK_POOL_SIZE`) | `200` |
 | `semanticSearch.rerank.timeoutSeconds` | Rerank request budget; on expiry the search degrades to retrieval order (`SEARCH_RERANK_TIMEOUT_SECONDS`) | `30.0` |
 | `semanticSearch.rerank.maxConcurrency` | Concurrent rerank calls per pod (`SEARCH_RERANK_MAX_CONCURRENCY`) | `1` |
+| `semanticSearch.imageEmbeddings.model` | Image embedding model id on the text-embedding provider (`IMAGE_EMBEDDING_MODEL`); empty = off. Server v0.217.0+ — see note below | `""` |
+| `semanticSearch.imageEmbeddings.dimensions` | Optional output width the model supports (`IMAGE_EMBEDDING_DIMENSIONS`) | `null` |
+| `semanticSearch.imageEmbeddings.scoreThreshold` | Image-search score floor in `[-1, 1]`; required for the feature to turn on (`IMAGE_SEARCH_SCORE_THRESHOLD`) | `null` |
+| `semanticSearch.imageEmbeddings.maxSourceBytes` | Max source image size in bytes; server default 50 MB (`IMAGE_EMBEDDING_MAX_SOURCE_BYTES`) | `null` |
 | `semanticSearch.sar.enabled` | Serve subject access request cases and redacted export (`SAR_ENABLED`, server 0.198.0+). Requires a gateway — see note below | `false` |
 | `semanticSearch.sar.ner.model` | Name-detection model for redaction, gateway-namespaced (`NER_MODEL`) | `"local/urchade/gliner_multi_pii-v1"` |
 | `semanticSearch.sar.ner.timeoutSeconds` | Per-request name-detection budget (`NER_TIMEOUT_SECONDS`) | `120` |
@@ -281,6 +285,13 @@ URL and M2M credentials (`EMBEDDING_GATEWAY_URL` / `_TOKEN_URL` / `_CLIENT_ID` /
 supply them from your private overlay via `extraEnv`. Setting
 `semanticSearch.rerank.enabled: true` without `EMBEDDING_GATEWAY_URL` makes the
 server raise at startup rather than silently serve unreranked results.
+
+**Image embeddings** (ADR-042) index and search images and need server
+v0.217.0 or later. Turning them on takes both a `model` and a
+`scoreThreshold` (no default floor ships). They are off by default — an
+empty `model` means off — because every indexed image is a paid embedding call
+that sends the image bytes to the provider. They use the same provider as text
+embeddings (`EMBEDDING_PROVIDER`). Each key is rendered only when set.
 
 **Subject access requests (SAR)** are off by default and enabled **per
 deployment** with `semanticSearch.sar.enabled: true`, for the tenants that
@@ -442,6 +453,7 @@ OCR backend selection is independent of the embedding provider — you can embed
 | `documentPipeline.ocr.pageFraction` | Escalation: fraction of sampled pages `[0,1]` that must be OCR-worthy before the whole doc escalates | `0.5` |
 | `documentPipeline.ocr.minPageChars` | Escalation: a page with fewer extracted chars than this counts as near-empty | `16` |
 | `documentPipeline.ocr.detectScanned` | Escalation: run raster-image analysis to detect scanned pages (OCR-enabled only) | `true` |
+| `documentPipeline.ocr.images` | Also OCR standalone PNG/JPEG/WebP files (`DOCUMENT_OCR_IMAGES`; OCR-enabled only; server v0.218.0+) | `false` |
 
 **Enable OCR via Mistral directly:**
 

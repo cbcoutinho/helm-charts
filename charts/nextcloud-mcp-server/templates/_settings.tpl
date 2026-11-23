@@ -73,6 +73,9 @@ DOCUMENT_OCR_MIN_TEXT_QUALITY = {{ .Values.documentPipeline.ocr.minTextQuality }
 DOCUMENT_OCR_PAGE_FRACTION = {{ .Values.documentPipeline.ocr.pageFraction }}
 DOCUMENT_OCR_MIN_PAGE_CHARS = {{ .Values.documentPipeline.ocr.minPageChars }}
 DOCUMENT_OCR_DETECT_SCANNED = {{ .Values.documentPipeline.ocr.detectScanned }}
+{{- if .Values.documentPipeline.ocr.images }}
+DOCUMENT_OCR_IMAGES = true
+{{- end }}
 {{- end }}
 # Semantic search / vector sync
 ENABLE_SEMANTIC_SEARCH = {{ .Values.semanticSearch.enabled }}
@@ -91,6 +94,20 @@ SEARCH_RERANK_MODEL = {{ .Values.semanticSearch.rerank.model | quote }}
 SEARCH_RERANK_POOL_SIZE = {{ .Values.semanticSearch.rerank.poolSize }}
 SEARCH_RERANK_TIMEOUT_SECONDS = {{ .Values.semanticSearch.rerank.timeoutSeconds }}
 SEARCH_RERANK_MAX_CONCURRENCY = {{ .Values.semanticSearch.rerank.maxConcurrency }}
+{{- end }}
+{{- with .Values.semanticSearch.imageEmbeddings }}
+{{- if .model }}
+IMAGE_EMBEDDING_MODEL = {{ .model | quote }}
+{{- end }}
+{{- if not (kindIs "invalid" .dimensions) }}
+IMAGE_EMBEDDING_DIMENSIONS = {{ int .dimensions }}
+{{- end }}
+{{- if not (kindIs "invalid" .scoreThreshold) }}
+IMAGE_SEARCH_SCORE_THRESHOLD = {{ float64 .scoreThreshold }}
+{{- end }}
+{{- if not (kindIs "invalid" .maxSourceBytes) }}
+IMAGE_EMBEDDING_MAX_SOURCE_BYTES = {{ int64 .maxSourceBytes }}
+{{- end }}
 {{- end }}
 SAR_ENABLED = {{ .Values.semanticSearch.sar.enabled }}
 {{- if .Values.semanticSearch.sar.enabled }}
