@@ -4,6 +4,55 @@ entries:
   - annotations:
       artifacthub.io/changes: |
         - kind: changed
+          description: "update ghcr.io/cbcoutinho/nextcloud-mcp-server docker tag to v0.219.0"
+        - kind: changed
+          description: "update anthropics/claude-code-action action to v1.0.289"
+        - kind: changed
+          description: "update anthropics/claude-code-action action to v1.0.286"
+      grafana_dashboard: "true"
+      grafana_dashboard_folder: Nextcloud MCP
+    apiVersion: v2
+    appVersion: 0.219.0
+    created: "2026-11-25T06:53:02.960587593Z"
+    dependencies:
+    - condition: qdrant.networkMode.deploySubchart
+      name: qdrant
+      repository: https://qdrant.github.io/qdrant-helm
+      version: 1.20.2
+    - condition: ollama.enabled
+      name: ollama
+      repository: https://otwld.github.io/ollama-helm
+      version: 1.95.0
+    description: A Helm chart for deploying Nextcloud MCP Server - enables AI assistants
+      to interact with Nextcloud
+    digest: cfce492690f82eb99b840ad82898d9d987292b468d2c9f217cb1ca6b1280f00b
+    home: https://github.com/cbcoutinho/nextcloud-mcp-server
+    icon: https://raw.githubusercontent.com/nextcloud/server/master/core/img/logo/logo.svg
+    keywords:
+    - nextcloud
+    - mcp
+    - model-context-protocol
+    - llm
+    - ai
+    - claude
+    - webdav
+    - caldav
+    - carddav
+    - helm
+    kubeVersion: '>=1.21.0-0'
+    maintainers:
+    - email: chris@coutinho.io
+      name: Chris Coutinho
+    name: nextcloud-mcp-server
+    sources:
+    - https://github.com/cbcoutinho/nextcloud-mcp-server
+    type: application
+    urls:
+    - https://github.com/cbcoutinho/helm-charts/releases/download/nextcloud-mcp-server-0.106.1/nextcloud-mcp-server-0.106.1.tgz
+    version: 0.106.1
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: changed
           description: "image embeddings and image OCR are released (server v0.217.0 / v0.218.0)"
         - kind: added
           description: "expose standalone-image OCR toggle (documentPipeline.ocr.images)"
@@ -9346,4 +9395,4 @@ entries:
     urls:
     - https://github.com/cbcoutinho/helm-charts/releases/download/nextcloud-mcp-server-0.59.1/nextcloud-mcp-server-0.59.1.tgz
     version: 0.59.1
-generated: "2026-11-23T01:06:21.767218622Z"
+generated: "2026-11-25T06:53:02.960882602Z"
