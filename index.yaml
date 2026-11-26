@@ -4,6 +4,51 @@ entries:
   - annotations:
       artifacthub.io/changes: |
         - kind: changed
+          description: "update ghcr.io/cbcoutinho/nextcloud-mcp-server docker tag to v0.226.1"
+      grafana_dashboard: "true"
+      grafana_dashboard_folder: Nextcloud MCP
+    apiVersion: v2
+    appVersion: 0.226.1
+    created: "2026-11-26T23:06:46.3121864Z"
+    dependencies:
+    - condition: qdrant.networkMode.deploySubchart
+      name: qdrant
+      repository: https://qdrant.github.io/qdrant-helm
+      version: 1.20.2
+    - condition: ollama.enabled
+      name: ollama
+      repository: https://otwld.github.io/ollama-helm
+      version: 1.96.0
+    description: A Helm chart for deploying Nextcloud MCP Server - enables AI assistants
+      to interact with Nextcloud
+    digest: 2fdfe017e1a19d5765eb615635992d882e702958b076a188a4889929a6af130c
+    home: https://github.com/cbcoutinho/nextcloud-mcp-server
+    icon: https://raw.githubusercontent.com/nextcloud/server/master/core/img/logo/logo.svg
+    keywords:
+    - nextcloud
+    - mcp
+    - model-context-protocol
+    - llm
+    - ai
+    - claude
+    - webdav
+    - caldav
+    - carddav
+    - helm
+    kubeVersion: '>=1.21.0-0'
+    maintainers:
+    - email: chris@coutinho.io
+      name: Chris Coutinho
+    name: nextcloud-mcp-server
+    sources:
+    - https://github.com/cbcoutinho/nextcloud-mcp-server
+    type: application
+    urls:
+    - https://github.com/cbcoutinho/helm-charts/releases/download/nextcloud-mcp-server-0.106.6/nextcloud-mcp-server-0.106.6.tgz
+    version: 0.106.6
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: changed
           description: "update ghcr.io/cbcoutinho/nextcloud-mcp-server docker tag to v0.221.2"
       grafana_dashboard: "true"
       grafana_dashboard_folder: Nextcloud MCP
@@ -9577,4 +9622,4 @@ entries:
     urls:
     - https://github.com/cbcoutinho/helm-charts/releases/download/nextcloud-mcp-server-0.59.1/nextcloud-mcp-server-0.59.1.tgz
     version: 0.59.1
-generated: "2026-11-25T23:56:11.630290719Z"
+generated: "2026-11-26T23:06:46.312888086Z"
