@@ -8,7 +8,9 @@
     {
       "customType": "regex",
       "description": "Update appVersion in Chart.yaml when new Docker image is published",
-      "fileMatch": ["charts/nextcloud-mcp-server/Chart\\.yaml$"],
+      "managerFilePatterns": [
+        "/charts/nextcloud-mcp-server/Chart\\.yaml$/"
+      ],
       "matchStrings": [
         "appVersion:\\s*\"(?<currentValue>[^\"]+)\""
       ],
@@ -19,7 +21,9 @@
     {
       "customType": "regex",
       "description": "Update inline-annotated docker tags in values.yaml (e.g. qdrant sidecar)",
-      "fileMatch": ["charts/.+/values\\.yaml$"],
+      "managerFilePatterns": [
+        "/charts/.+/values\\.yaml$/"
+      ],
       "matchStrings": [
         "# renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>[^\\s]+)(?: versioning=(?<versioning>[^\\s]+))?\\s+tag:\\s*\"?(?<currentValue>[^\"\\s]+)\"?"
       ],
