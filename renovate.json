@@ -20,12 +20,12 @@
     },
     {
       "customType": "regex",
-      "description": "Update inline-annotated docker tags in values.yaml (e.g. qdrant sidecar)",
+      "description": "Update inline-annotated docker tags (and their optional @sha256 digest) in values.yaml (e.g. qdrant sidecar)",
       "managerFilePatterns": [
         "/charts/.+/values\\.yaml$/"
       ],
       "matchStrings": [
-        "# renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>[^\\s]+)(?: versioning=(?<versioning>[^\\s]+))?\\s+tag:\\s*\"?(?<currentValue>[^\"\\s]+)\"?"
+        "# renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>[^\\s]+)(?: versioning=(?<versioning>[^\\s]+))?\\s+tag:\\s*\"?(?<currentValue>[^\"\\s@]+)(?:@(?<currentDigest>sha256:[a-f0-9]+))?\"?"
       ],
       "versioningTemplate": "{{#if versioning}}{{versioning}}{{else}}semver{{/if}}",
       "extractVersionTemplate": "^v?(?<version>.*)$"
