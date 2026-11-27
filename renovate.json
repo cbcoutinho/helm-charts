@@ -30,5 +30,17 @@
       "versioningTemplate": "{{#if versioning}}{{versioning}}{{else}}semver{{/if}}",
       "extractVersionTemplate": "^v?(?<version>.*)$"
     }
+  ],
+  "packageRules": [
+    {
+      "description": "appVersion in Chart.yaml is a chart version string that the deployment template uses as the image tag, so it cannot hold a digest. Without this, docker:pinDigests fails the whole pin-dependencies branch.",
+      "matchFileNames": [
+        "charts/nextcloud-mcp-server/Chart.yaml"
+      ],
+      "matchDepNames": [
+        "ghcr.io/cbcoutinho/nextcloud-mcp-server"
+      ],
+      "pinDigests": false
+    }
   ]
 }
